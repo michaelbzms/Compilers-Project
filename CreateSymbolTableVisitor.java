@@ -59,7 +59,6 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     * f17 -> "}"
     */
     public ReturnInfo visit(MainClass n, ParameterInfo argu)  {
-        if (detectedSemanticError) return null;
         n.f0.accept(this, null);
         ReturnInfo r1 = n.f1.accept(this, null);      // r1 -> main class name
         ST.setMainClassName(r1.name);
@@ -95,6 +94,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
         if (detectedSemanticError) return null;
         n.f0.accept(this, null);
         ReturnInfo r1 = n.f1.accept(this, null);
+        ST.putClass(r1.name, new ClassInfo());
         n.f2.accept(this, null);
         n.f3.accept(this, new ParameterInfo(r1.name));
         n.f4.accept(this, new ParameterInfo(r1.name));
@@ -118,12 +118,12 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
         ReturnInfo r1 = n.f1.accept(this, null);
         n.f2.accept(this, null);
         ReturnInfo r3 = n.f3.accept(this, null);
-        if (ST.lookupClass(r3.name) == null){  // if in "class B extends A", A is not defined previously then error
+        ST.putClass(r1.name, new ClassInfo(r3.name));
+        if (ST.lookupClass(r3.name) == null){  // in "class B extends A", if A is not defined previously then error
             this.detectedSemanticError = true;
             this.errorMsg = "class " + r3.name + " has not been defined yet in \"class " + r1.name + " extends " + r3.name + "\"";
             return null;
         }
-
         n.f4.accept(this, null);
         n.f5.accept(this, new ParameterInfo(r1.name, r3.name));
         n.f6.accept(this, new ParameterInfo(r1.name, r3.name));
