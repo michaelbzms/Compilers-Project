@@ -1,9 +1,8 @@
 import syntaxtree.*;
-import visitor.GJDepthFirst;
-import java.util.Pair;
+import visitor.GJNoArguDepthFirst;
 
 
-private class ReturnInfo {
+class ReturnInfo {
     public String name = null;
     public Type type = null;
 
@@ -28,17 +27,6 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
         this.ST = _ST;
     }
 
-    /**
-    * f0 -> MainClass()
-    * f1 -> ( TypeDeclaration() )*
-    * f2 -> <EOF>
-    */
-    public ReturnInfo visit(Goal n) {
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
-        return null;
-    }
 
     /**
     * f0 -> "class"
@@ -63,6 +51,7 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     public ReturnInfo visit(MainClass n) {
         n.f0.accept(this);
         ReturnInfo r1 = n.f1.accept(this);      // r1 -> main class name
+        ST.setMainClassName(r1.name);
         n.f2.accept(this);
         n.f3.accept(this);
         n.f4.accept(this);
@@ -73,22 +62,21 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
         n.f9.accept(this);
         n.f10.accept(this);
         ReturnInfo r11 = n.f11.accept(this);   // r11 -> name of main()'s String[] args variable
+        ST.setMainClassArgName(r11.name);
         n.f12.accept(this);
         n.f13.accept(this);
         n.f14.accept(this);
         n.f15.accept(this);
         n.f16.accept(this);
         n.f17.accept(this);
-        // insert main class info to ST (only need to know its class's name and String[] args variable name)
-        ST.insert(r1.name, new ClassInfo(r11.name));
-        return ;
+        return null;
     }
 
     /**
     * f0 -> ClassDeclaration()
     *       | ClassExtendsDeclaration()
     */
-    public R visit(TypeDeclaration n) {
+    public ReturnInfo visit(TypeDeclaration n) {
         return n.f0.accept(this);
     }
 
@@ -100,8 +88,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f4 -> ( MethodDeclaration() )*
     * f5 -> "}"
     */
-    public R visit(ClassDeclaration n) {
-        R _ret=null;
+    public ReturnInfo visit(ClassDeclaration n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -121,8 +109,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f6 -> ( MethodDeclaration() )*
     * f7 -> "}"
     */
-    public R visit(ClassExtendsDeclaration n) {
-        R _ret=null;
+    public ReturnInfo visit(ClassExtendsDeclaration n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -139,8 +127,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> Identifier()
     * f2 -> ";"
     */
-    public R visit(VarDeclaration n) {
-        R _ret=null;
+    public ReturnInfo visit(VarDeclaration n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -162,8 +150,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f11 -> ";"
     * f12 -> "}"
     */
-    public R visit(MethodDeclaration n) {
-        R _ret=null;
+    public ReturnInfo visit(MethodDeclaration n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -184,8 +172,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f0 -> FormalParameter()
     * f1 -> FormalParameterTail()
     */
-    public R visit(FormalParameterList n) {
-        R _ret=null;
+    public ReturnInfo visit(FormalParameterList n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         return _ret;
@@ -195,8 +183,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f0 -> Type()
     * f1 -> Identifier()
     */
-    public R visit(FormalParameter n) {
-        R _ret=null;
+    public ReturnInfo visit(FormalParameter n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         return _ret;
@@ -205,7 +193,7 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     /**
     * f0 -> ( FormalParameterTerm() )*
     */
-    public R visit(FormalParameterTail n) {
+    public ReturnInfo visit(FormalParameterTail n) {
         return n.f0.accept(this);
     }
 
@@ -213,8 +201,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f0 -> ","
     * f1 -> FormalParameter()
     */
-    public R visit(FormalParameterTerm n) {
-        R _ret=null;
+    public ReturnInfo visit(FormalParameterTerm n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         return _ret;
@@ -226,7 +214,7 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     *       | IntegerType()
     *       | Identifier()
     */
-    public R visit(Type n) {
+    public ReturnInfo visit(Type n) {
         return n.f0.accept(this);
     }
 
@@ -235,8 +223,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "["
     * f2 -> "]"
     */
-    public R visit(ArrayType n) {
-        R _ret=null;
+    public ReturnInfo visit(ArrayType n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -246,14 +234,14 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     /**
     * f0 -> "boolean"
     */
-    public R visit(BooleanType n) {
+    public ReturnInfo visit(BooleanType n) {
         return n.f0.accept(this);
     }
 
     /**
     * f0 -> "int"
     */
-    public R visit(IntegerType n) {
+    public ReturnInfo visit(IntegerType n) {
         return n.f0.accept(this);
     }
 
@@ -265,7 +253,7 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     *       | WhileStatement()
     *       | PrintStatement()
     */
-    public R visit(Statement n) {
+    public ReturnInfo visit(Statement n) {
         return n.f0.accept(this);
     }
 
@@ -274,8 +262,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> ( Statement() )*
     * f2 -> "}"
     */
-    public R visit(Block n) {
-        R _ret=null;
+    public ReturnInfo visit(Block n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -288,8 +276,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f2 -> Expression()
     * f3 -> ";"
     */
-    public R visit(AssignmentStatement n) {
-        R _ret=null;
+    public ReturnInfo visit(AssignmentStatement n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -306,8 +294,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f5 -> Expression()
     * f6 -> ";"
     */
-    public R visit(ArrayAssignmentStatement n) {
-        R _ret=null;
+    public ReturnInfo visit(ArrayAssignmentStatement n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -327,8 +315,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f5 -> "else"
     * f6 -> Statement()
     */
-    public R visit(IfStatement n) {
-        R _ret=null;
+    public ReturnInfo visit(IfStatement n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -346,8 +334,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f3 -> ")"
     * f4 -> Statement()
     */
-    public R visit(WhileStatement n) {
-        R _ret=null;
+    public ReturnInfo visit(WhileStatement n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -363,8 +351,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f3 -> ")"
     * f4 -> ";"
     */
-    public R visit(PrintStatement n) {
-        R _ret=null;
+    public ReturnInfo visit(PrintStatement n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -384,7 +372,7 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     *       | MessageSend()
     *       | Clause()
     */
-    public R visit(Expression n) {
+    public ReturnInfo visit(Expression n) {
         return n.f0.accept(this);
     }
 
@@ -393,8 +381,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "&&"
     * f2 -> Clause()
     */
-    public R visit(AndExpression n) {
-        R _ret=null;
+    public ReturnInfo visit(AndExpression n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -406,8 +394,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "<"
     * f2 -> PrimaryExpression()
     */
-    public R visit(CompareExpression n) {
-        R _ret=null;
+    public ReturnInfo visit(CompareExpression n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -419,8 +407,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "+"
     * f2 -> PrimaryExpression()
     */
-    public R visit(PlusExpression n) {
-        R _ret=null;
+    public ReturnInfo visit(PlusExpression n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -432,8 +420,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "-"
     * f2 -> PrimaryExpression()
     */
-    public R visit(MinusExpression n) {
-        R _ret=null;
+    public ReturnInfo visit(MinusExpression n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -445,8 +433,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "*"
     * f2 -> PrimaryExpression()
     */
-    public R visit(TimesExpression n) {
-        R _ret=null;
+    public ReturnInfo visit(TimesExpression n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -459,8 +447,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f2 -> PrimaryExpression()
     * f3 -> "]"
     */
-    public R visit(ArrayLookup n) {
-        R _ret=null;
+    public ReturnInfo visit(ArrayLookup n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -473,8 +461,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "."
     * f2 -> "length"
     */
-    public R visit(ArrayLength n) {
-        R _ret=null;
+    public ReturnInfo visit(ArrayLength n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -489,8 +477,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f4 -> ( ExpressionList() )?
     * f5 -> ")"
     */
-    public R visit(MessageSend n) {
-        R _ret=null;
+    public ReturnInfo visit(MessageSend n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -504,8 +492,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f0 -> Expression()
     * f1 -> ExpressionTail()
     */
-    public R visit(ExpressionList n) {
-        R _ret=null;
+    public ReturnInfo visit(ExpressionList n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         return _ret;
@@ -514,7 +502,7 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     /**
     * f0 -> ( ExpressionTerm() )*
     */
-    public R visit(ExpressionTail n) {
+    public ReturnInfo visit(ExpressionTail n) {
         return n.f0.accept(this);
     }
 
@@ -522,8 +510,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f0 -> ","
     * f1 -> Expression()
     */
-    public R visit(ExpressionTerm n) {
-        R _ret=null;
+    public ReturnInfo visit(ExpressionTerm n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         return _ret;
@@ -533,7 +521,7 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f0 -> NotExpression()
     *       | PrimaryExpression()
     */
-    public R visit(Clause n) {
+    public ReturnInfo visit(Clause n) {
         return n.f0.accept(this);
     }
 
@@ -547,28 +535,28 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     *       | AllocationExpression()
     *       | BracketExpression()
     */
-    public R visit(PrimaryExpression n) {
+    public ReturnInfo visit(PrimaryExpression n) {
         return n.f0.accept(this);
     }
 
     /**
     * f0 -> <INTEGER_LITERAL>
     */
-    public R visit(IntegerLiteral n) {
+    public ReturnInfo visit(IntegerLiteral n) {
         return n.f0.accept(this);
     }
 
     /**
     * f0 -> "true"
     */
-    public R visit(TrueLiteral n) {
+    public ReturnInfo visit(TrueLiteral n) {
         return n.f0.accept(this);
     }
 
     /**
     * f0 -> "false"
     */
-    public R visit(FalseLiteral n) {
+    public ReturnInfo visit(FalseLiteral n) {
         return n.f0.accept(this);
     }
 
@@ -582,8 +570,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     /**
     * f0 -> "this"
     */
-    public R visit(ThisExpression n) {
-        return new ReturnInfo(false);
+    public ReturnInfo visit(ThisExpression n) {
+        return null;
     }
 
     /**
@@ -593,8 +581,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f3 -> Expression()
     * f4 -> "]"
     */
-    public R visit(ArrayAllocationExpression n) {
-        R _ret=null;
+    public ReturnInfo visit(ArrayAllocationExpression n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -609,8 +597,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f2 -> "("
     * f3 -> ")"
     */
-    public R visit(AllocationExpression n) {
-        R _ret=null;
+    public ReturnInfo visit(AllocationExpression n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
@@ -622,8 +610,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f0 -> "!"
     * f1 -> Clause()
     */
-    public R visit(NotExpression n) {
-        R _ret=null;
+    public ReturnInfo visit(NotExpression n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         return _ret;
@@ -634,8 +622,8 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> Expression()
     * f2 -> ")"
     */
-    public R visit(BracketExpression n) {
-        R _ret=null;
+    public ReturnInfo visit(BracketExpression n) {
+        ReturnInfo _ret=null;
         n.f0.accept(this);
         n.f1.accept(this);
         n.f2.accept(this);
