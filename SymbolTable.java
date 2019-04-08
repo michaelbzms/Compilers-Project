@@ -16,24 +16,24 @@ import java.util.HashMap;
  */
 
 
-enum Type {
+enum TypeEnum {
 	INTEGER, BOOLEAN, INTARRAY;
 }
 
 
 class VariableInfo {
-	private Type type;
+	private TypeEnum type;
 
-	public VariableInfo(Type _type) { type = _type; }
-	public Type getType() { return type; }
+	public VariableInfo(TypeEnum _type) { type = _type; }
+	public TypeEnum getType() { return type; }
 }
 
 class MethodInfo {
-	private Type returnType;
+	private TypeEnum returnType;
 	private Map<String, VariableInfo> variables = new HashMap<String, VariableInfo>();  // variable name -> Variable Info
 
-	public MethodInfo(Type _returnType){ returnType = _returnType; }
-	public Type getReturnType() { return returnType; }
+	public MethodInfo(TypeEnum _returnType){ returnType = _returnType; }
+	public TypeEnum getReturnType() { return returnType; }
 
 	public VariableInfo getVariableInfo(String variableName){
 		return variables.get(variableName);
