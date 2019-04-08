@@ -12,15 +12,16 @@ class Main {
 			FileInputStream fis = null;
 			try {
 			    fis = new FileInputStream(args[0]);
-			    CalcParser parser = new CalcParser(fis);
+			    MiniJavaParser parser = new MiniJavaParser(fis);
 			    System.err.println("Program \"" + args[i] + "\" parsed successfully.");
 
 			    // Create Symbol Table
 			    symbolTable = new SymbolTable;
 			    CreateSymbolTableVisitor STVisitor = new CreateSymbolTableVisitor(symbolTable);
 			    Goal root = parser.Goal();
-			    if (! root.accept(STVisitor, null) ){
-			    	System.out.println("Semantic error: failed Uniqueness test");
+			    root.accept(STVisitor);
+			    if (STVisitor.detectedSemanticError) {
+			    	System.out.println("Semantic error");
 			    	continue;
 			    }
 
