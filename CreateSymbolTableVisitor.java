@@ -1,26 +1,36 @@
 import syntaxtree.*;
-import visitor.GJNoArguDepthFirst;
-
+import visitor.GJDepthFirst;
 
 class ReturnInfo {
     public String name = null;
     public Type type = null;
-
     public ReturnInfo(String _name){
         name = _name;
     }
-
     public ReturnInfo(Type _type){
         type = _type;
     }
 }
 
+class ParameterInfo{
+    public String name = null;
+    public String supername = null;
+    public ParameterInfo(String _name){
+        name = _name;
+    }
+    public ParameterInfo(String _name, String _supername){
+        name = _name;
+        supername = _supername;
+    }
+}
 
 
-public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
+
+public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, ParameterInfo> {
 
     public boolean detectedSemanticError = false;
-    public SymbolTable ST = null;
+    public String errorMsg = "";
+    public SymbolTable ST;
 
     public CreateSymbolTableVisitor(SymbolTable _ST){
         super();
@@ -48,36 +58,29 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f16 -> "}"
     * f17 -> "}"
     */
-    public ReturnInfo visit(MainClass n) {
-        n.f0.accept(this);
-        ReturnInfo r1 = n.f1.accept(this);      // r1 -> main class name
+    public ReturnInfo visit(MainClass n, ParameterInfo argu)  {
+        if (detectedSemanticError) return null;
+        n.f0.accept(this, null);
+        ReturnInfo r1 = n.f1.accept(this, null);      // r1 -> main class name
         ST.setMainClassName(r1.name);
-        n.f2.accept(this);
-        n.f3.accept(this);
-        n.f4.accept(this);
-        n.f5.accept(this);
-        n.f6.accept(this);
-        n.f7.accept(this);
-        n.f8.accept(this);
-        n.f9.accept(this);
-        n.f10.accept(this);
-        ReturnInfo r11 = n.f11.accept(this);   // r11 -> name of main()'s String[] args variable
+        n.f2.accept(this, null);
+        n.f3.accept(this, null);
+        n.f4.accept(this, null);
+        n.f5.accept(this, null);
+        n.f6.accept(this, null);
+        n.f7.accept(this, null);
+        n.f8.accept(this, null);
+        n.f9.accept(this, null);
+        n.f10.accept(this, null);
+        ReturnInfo r11 = n.f11.accept(this, null);   // r11 -> name of main()'s String[] args variable
         ST.setMainClassArgName(r11.name);
-        n.f12.accept(this);
-        n.f13.accept(this);
-        n.f14.accept(this);
-        n.f15.accept(this);
-        n.f16.accept(this);
-        n.f17.accept(this);
+        n.f12.accept(this, null);
+        n.f13.accept(this, null);
+        n.f14.accept(this, null);
+        n.f15.accept(this, null);
+        n.f16.accept(this, null);
+        n.f17.accept(this, null);
         return null;
-    }
-
-    /**
-    * f0 -> ClassDeclaration()
-    *       | ClassExtendsDeclaration()
-    */
-    public ReturnInfo visit(TypeDeclaration n) {
-        return n.f0.accept(this);
     }
 
     /**
@@ -88,15 +91,15 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f4 -> ( MethodDeclaration() )*
     * f5 -> "}"
     */
-    public ReturnInfo visit(ClassDeclaration n) {
-        ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
-        n.f3.accept(this);
-        n.f4.accept(this);
-        n.f5.accept(this);
-        return _ret;
+    public ReturnInfo visit(ClassDeclaration n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        n.f0.accept(this, null);
+        ReturnInfo r1 = n.f1.accept(this, null);
+        n.f2.accept(this, null);
+        n.f3.accept(this, new ParameterInfo(r1.name));
+        n.f4.accept(this, new ParameterInfo(r1.name));
+        n.f5.accept(this, null);
+        return null;
     }
 
     /**
@@ -109,17 +112,23 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f6 -> ( MethodDeclaration() )*
     * f7 -> "}"
     */
-    public ReturnInfo visit(ClassExtendsDeclaration n) {
-        ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
-        n.f3.accept(this);
-        n.f4.accept(this);
-        n.f5.accept(this);
-        n.f6.accept(this);
-        n.f7.accept(this);
-        return _ret;
+    public ReturnInfo visit(ClassExtendsDeclaration n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        n.f0.accept(this, null);
+        ReturnInfo r1 = n.f1.accept(this, null);
+        n.f2.accept(this, null);
+        ReturnInfo r3 = n.f3.accept(this, null);
+        if (ST.lookupClass(r3.name) == null){  // if in "class B extends A", A is not defined previously then error
+            this.detectedSemanticError = true;
+            this.errorMsg = "class " + r3.name + " has not been defined yet in \"class " + r1.name + " extends " + r3.name + "\"";
+            return null;
+        }
+
+        n.f4.accept(this, null);
+        n.f5.accept(this, new ParameterInfo(r1.name, r3.name));
+        n.f6.accept(this, new ParameterInfo(r1.name, r3.name));
+        n.f7.accept(this, null);
+        return null;
     }
 
     /**
@@ -127,11 +136,12 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> Identifier()
     * f2 -> ";"
     */
-    public ReturnInfo visit(VarDeclaration n) {
+    public ReturnInfo visit(VarDeclaration n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
         return _ret;
     }
 
@@ -150,21 +160,22 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f11 -> ";"
     * f12 -> "}"
     */
-    public ReturnInfo visit(MethodDeclaration n) {
+    public ReturnInfo visit(MethodDeclaration n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
-        n.f3.accept(this);
-        n.f4.accept(this);
-        n.f5.accept(this);
-        n.f6.accept(this);
-        n.f7.accept(this);
-        n.f8.accept(this);
-        n.f9.accept(this);
-        n.f10.accept(this);
-        n.f11.accept(this);
-        n.f12.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
+        n.f3.accept(this, null);
+        n.f4.accept(this, null);
+        n.f5.accept(this, null);
+        n.f6.accept(this, null);
+        n.f7.accept(this, null);
+        n.f8.accept(this, null);
+        n.f9.accept(this, null);
+        n.f10.accept(this, null);
+        n.f11.accept(this, null);
+        n.f12.accept(this, null);
         return _ret;
     }
 
@@ -172,10 +183,11 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f0 -> FormalParameter()
     * f1 -> FormalParameterTail()
     */
-    public ReturnInfo visit(FormalParameterList n) {
+    public ReturnInfo visit(FormalParameterList n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
         return _ret;
     }
 
@@ -183,28 +195,31 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f0 -> Type()
     * f1 -> Identifier()
     */
-    public ReturnInfo visit(FormalParameter n) {
+    public ReturnInfo visit(FormalParameter n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
         return _ret;
     }
 
     /**
     * f0 -> ( FormalParameterTerm() )*
     */
-    public ReturnInfo visit(FormalParameterTail n) {
-        return n.f0.accept(this);
+    public ReturnInfo visit(FormalParameterTail n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        return n.f0.accept(this, null);
     }
 
     /**
     * f0 -> ","
     * f1 -> FormalParameter()
     */
-    public ReturnInfo visit(FormalParameterTerm n) {
+    public ReturnInfo visit(FormalParameterTerm n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
         return _ret;
     }
 
@@ -214,8 +229,9 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     *       | IntegerType()
     *       | Identifier()
     */
-    public ReturnInfo visit(Type n) {
-        return n.f0.accept(this);
+    public ReturnInfo visit(Type n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        return n.f0.accept(this, null);
     }
 
     /**
@@ -223,26 +239,29 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "["
     * f2 -> "]"
     */
-    public ReturnInfo visit(ArrayType n) {
+    public ReturnInfo visit(ArrayType n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
         return _ret;
     }
 
     /**
     * f0 -> "boolean"
     */
-    public ReturnInfo visit(BooleanType n) {
-        return n.f0.accept(this);
+    public ReturnInfo visit(BooleanType n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        return n.f0.accept(this, null);
     }
 
     /**
     * f0 -> "int"
     */
-    public ReturnInfo visit(IntegerType n) {
-        return n.f0.accept(this);
+    public ReturnInfo visit(IntegerType n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        return n.f0.accept(this, null);
     }
 
     /**
@@ -253,8 +272,9 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     *       | WhileStatement()
     *       | PrintStatement()
     */
-    public ReturnInfo visit(Statement n) {
-        return n.f0.accept(this);
+    public ReturnInfo visit(Statement n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        return n.f0.accept(this, null);
     }
 
     /**
@@ -262,11 +282,12 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> ( Statement() )*
     * f2 -> "}"
     */
-    public ReturnInfo visit(Block n) {
+    public ReturnInfo visit(Block n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
         return _ret;
     }
 
@@ -276,12 +297,13 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f2 -> Expression()
     * f3 -> ";"
     */
-    public ReturnInfo visit(AssignmentStatement n) {
+    public ReturnInfo visit(AssignmentStatement n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
-        n.f3.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
+        n.f3.accept(this, null);
         return _ret;
     }
 
@@ -294,15 +316,16 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f5 -> Expression()
     * f6 -> ";"
     */
-    public ReturnInfo visit(ArrayAssignmentStatement n) {
+    public ReturnInfo visit(ArrayAssignmentStatement n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
-        n.f3.accept(this);
-        n.f4.accept(this);
-        n.f5.accept(this);
-        n.f6.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
+        n.f3.accept(this, null);
+        n.f4.accept(this, null);
+        n.f5.accept(this, null);
+        n.f6.accept(this, null);
         return _ret;
     }
 
@@ -315,15 +338,16 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f5 -> "else"
     * f6 -> Statement()
     */
-    public ReturnInfo visit(IfStatement n) {
+    public ReturnInfo visit(IfStatement n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
-        n.f3.accept(this);
-        n.f4.accept(this);
-        n.f5.accept(this);
-        n.f6.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
+        n.f3.accept(this, null);
+        n.f4.accept(this, null);
+        n.f5.accept(this, null);
+        n.f6.accept(this, null);
         return _ret;
     }
 
@@ -334,13 +358,14 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f3 -> ")"
     * f4 -> Statement()
     */
-    public ReturnInfo visit(WhileStatement n) {
+    public ReturnInfo visit(WhileStatement n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
-        n.f3.accept(this);
-        n.f4.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
+        n.f3.accept(this, null);
+        n.f4.accept(this, null);
         return _ret;
     }
 
@@ -351,13 +376,14 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f3 -> ")"
     * f4 -> ";"
     */
-    public ReturnInfo visit(PrintStatement n) {
+    public ReturnInfo visit(PrintStatement n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
-        n.f3.accept(this);
-        n.f4.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
+        n.f3.accept(this, null);
+        n.f4.accept(this, null);
         return _ret;
     }
 
@@ -372,8 +398,9 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     *       | MessageSend()
     *       | Clause()
     */
-    public ReturnInfo visit(Expression n) {
-        return n.f0.accept(this);
+    public ReturnInfo visit(Expression n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        return n.f0.accept(this, null);
     }
 
     /**
@@ -381,11 +408,12 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "&&"
     * f2 -> Clause()
     */
-    public ReturnInfo visit(AndExpression n) {
+    public ReturnInfo visit(AndExpression n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
         return _ret;
     }
 
@@ -394,11 +422,12 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "<"
     * f2 -> PrimaryExpression()
     */
-    public ReturnInfo visit(CompareExpression n) {
+    public ReturnInfo visit(CompareExpression n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
         return _ret;
     }
 
@@ -407,11 +436,12 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "+"
     * f2 -> PrimaryExpression()
     */
-    public ReturnInfo visit(PlusExpression n) {
+    public ReturnInfo visit(PlusExpression n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
         return _ret;
     }
 
@@ -420,11 +450,12 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "-"
     * f2 -> PrimaryExpression()
     */
-    public ReturnInfo visit(MinusExpression n) {
+    public ReturnInfo visit(MinusExpression n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
         return _ret;
     }
 
@@ -433,11 +464,12 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "*"
     * f2 -> PrimaryExpression()
     */
-    public ReturnInfo visit(TimesExpression n) {
+    public ReturnInfo visit(TimesExpression n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
         return _ret;
     }
 
@@ -447,12 +479,13 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f2 -> PrimaryExpression()
     * f3 -> "]"
     */
-    public ReturnInfo visit(ArrayLookup n) {
+    public ReturnInfo visit(ArrayLookup n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
-        n.f3.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
+        n.f3.accept(this, null);
         return _ret;
     }
 
@@ -461,11 +494,12 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> "."
     * f2 -> "length"
     */
-    public ReturnInfo visit(ArrayLength n) {
+    public ReturnInfo visit(ArrayLength n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
         return _ret;
     }
 
@@ -477,14 +511,15 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f4 -> ( ExpressionList() )?
     * f5 -> ")"
     */
-    public ReturnInfo visit(MessageSend n) {
+    public ReturnInfo visit(MessageSend n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
-        n.f3.accept(this);
-        n.f4.accept(this);
-        n.f5.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
+        n.f3.accept(this, null);
+        n.f4.accept(this, null);
+        n.f5.accept(this, null);
         return _ret;
     }
 
@@ -492,28 +527,31 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f0 -> Expression()
     * f1 -> ExpressionTail()
     */
-    public ReturnInfo visit(ExpressionList n) {
+    public ReturnInfo visit(ExpressionList n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
         return _ret;
     }
 
     /**
     * f0 -> ( ExpressionTerm() )*
     */
-    public ReturnInfo visit(ExpressionTail n) {
-        return n.f0.accept(this);
+    public ReturnInfo visit(ExpressionTail n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        return n.f0.accept(this, null);
     }
 
     /**
     * f0 -> ","
     * f1 -> Expression()
     */
-    public ReturnInfo visit(ExpressionTerm n) {
+    public ReturnInfo visit(ExpressionTerm n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
         return _ret;
     }
 
@@ -521,8 +559,9 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f0 -> NotExpression()
     *       | PrimaryExpression()
     */
-    public ReturnInfo visit(Clause n) {
-        return n.f0.accept(this);
+    public ReturnInfo visit(Clause n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        return n.f0.accept(this, null);
     }
 
     /**
@@ -535,42 +574,46 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     *       | AllocationExpression()
     *       | BracketExpression()
     */
-    public ReturnInfo visit(PrimaryExpression n) {
-        return n.f0.accept(this);
+    public ReturnInfo visit(PrimaryExpression n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        return n.f0.accept(this, null);
     }
 
     /**
     * f0 -> <INTEGER_LITERAL>
     */
-    public ReturnInfo visit(IntegerLiteral n) {
-        return n.f0.accept(this);
+    public ReturnInfo visit(IntegerLiteral n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        return n.f0.accept(this, null);
     }
 
     /**
     * f0 -> "true"
     */
-    public ReturnInfo visit(TrueLiteral n) {
-        return n.f0.accept(this);
+    public ReturnInfo visit(TrueLiteral n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        return n.f0.accept(this, null);
     }
 
     /**
     * f0 -> "false"
     */
-    public ReturnInfo visit(FalseLiteral n) {
-        return n.f0.accept(this);
+    public ReturnInfo visit(FalseLiteral n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        return n.f0.accept(this, null);
     }
 
     /**
     * f0 -> <IDENTIFIER>
     */
-    public ReturnInfo visit(Identifier n) {
+    public ReturnInfo visit(Identifier n, ParameterInfo argu) {
         return new ReturnInfo(n.f0.toString());
     }
 
     /**
     * f0 -> "this"
     */
-    public ReturnInfo visit(ThisExpression n) {
+    public ReturnInfo visit(ThisExpression n, ParameterInfo argu) {
         return null;
     }
 
@@ -581,13 +624,14 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f3 -> Expression()
     * f4 -> "]"
     */
-    public ReturnInfo visit(ArrayAllocationExpression n) {
+    public ReturnInfo visit(ArrayAllocationExpression n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
-        n.f3.accept(this);
-        n.f4.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
+        n.f3.accept(this, null);
+        n.f4.accept(this, null);
         return _ret;
     }
 
@@ -597,12 +641,13 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f2 -> "("
     * f3 -> ")"
     */
-    public ReturnInfo visit(AllocationExpression n) {
+    public ReturnInfo visit(AllocationExpression n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
-        n.f3.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
+        n.f3.accept(this, null);
         return _ret;
     }
 
@@ -610,10 +655,11 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f0 -> "!"
     * f1 -> Clause()
     */
-    public ReturnInfo visit(NotExpression n) {
+    public ReturnInfo visit(NotExpression n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
         return _ret;
     }
 
@@ -622,11 +668,12 @@ public class CreateSymbolTableVisitor extends GJNoArguDepthFirst<ReturnInfo>{
     * f1 -> Expression()
     * f2 -> ")"
     */
-    public ReturnInfo visit(BracketExpression n) {
+    public ReturnInfo visit(BracketExpression n, ParameterInfo argu) {
+        if (detectedSemanticError) return null;
         ReturnInfo _ret=null;
-        n.f0.accept(this);
-        n.f1.accept(this);
-        n.f2.accept(this);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
         return _ret;
     }
 
