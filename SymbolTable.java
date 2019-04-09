@@ -230,7 +230,7 @@ public class SymbolTable {
 	////     DEBUG     /////
 	////////////////////////
 	public void printDebugInfo(){
-		System.out.println("Main class: name = " + mainClassName + ", args_name = " + mainClassArgName + "\nMain method variables are: ");
+		System.out.println("Main class: name = " + getMainClassName() + ", args_name = " + getMainClassArgName() + "\nMain method variables are: ");
 		System.out.println(Collections.singletonList(mainMethodVariables));
 		System.out.println("Statistics for classes are: ");
 		for (Map.Entry<String, ClassInfo> entry : classes.entrySet()) {
