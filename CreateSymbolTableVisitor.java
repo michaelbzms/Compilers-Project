@@ -3,24 +3,30 @@ import visitor.GJDepthFirst;
 
 class ReturnInfo {
     public String name = null;
-    public Type type = null;
+    public TypeEnum type = null;
     public ReturnInfo(String _name){
         name = _name;
     }
-    public ReturnInfo(Type _type){
+    public ReturnInfo(TypeEnum _type){
+        type = _type;
+    }
+    public ReturnInfo(String _name, TypeEnum _type){
+        name = _name;
         type = _type;
     }
 }
 
 class ParameterInfo{
-    public String name = null;
+    public String name;
     public String supername = null;
-    public ParameterInfo(String _name){
-        name = _name;
+    public String type;
+    public ParameterInfo(String _name, String _type){
+        name = _name; type=_type;
     }
-    public ParameterInfo(String _name, String _supername){
+    public ParameterInfo(String _name, String _supername, String _type){
         name = _name;
         supername = _supername;
+        type = _type;
     }
 }
 
@@ -61,6 +67,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     public ReturnInfo visit(MainClass n, ParameterInfo argu)  {
         n.f0.accept(this, null);
         ReturnInfo r1 = n.f1.accept(this, null);      // r1 -> main class name
+        if (r1 == null) return null;
         ST.setMainClassName(r1.name);
         n.f2.accept(this, null);
         n.f3.accept(this, null);
@@ -72,10 +79,11 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
         n.f9.accept(this, null);
         n.f10.accept(this, null);
         ReturnInfo r11 = n.f11.accept(this, null);   // r11 -> name of main()'s String[] args variable
+        if (r11 == null) return null;
         ST.setMainClassArgName(r11.name);
         n.f12.accept(this, null);
         n.f13.accept(this, null);
-        n.f14.accept(this, null);
+        n.f14.accept(this, new ParameterInfo(null, "mainclass"));
         n.f15.accept(this, null);
         n.f16.accept(this, null);
         n.f17.accept(this, null);
@@ -94,10 +102,11 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
         if (detectedSemanticError) return null;
         n.f0.accept(this, null);
         ReturnInfo r1 = n.f1.accept(this, null);
+        if (r1 == null) return null;
         ST.putClass(r1.name, new ClassInfo());
         n.f2.accept(this, null);
-        n.f3.accept(this, new ParameterInfo(r1.name));
-        n.f4.accept(this, new ParameterInfo(r1.name));
+        n.f3.accept(this, new ParameterInfo(r1.name, "class"));
+        n.f4.accept(this, new ParameterInfo(r1.name, "class"));
         n.f5.accept(this, null);
         return null;
     }
@@ -116,17 +125,19 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
         if (detectedSemanticError) return null;
         n.f0.accept(this, null);
         ReturnInfo r1 = n.f1.accept(this, null);
+        if (r1 == null) return null;
         n.f2.accept(this, null);
         ReturnInfo r3 = n.f3.accept(this, null);
-        ST.putClass(r1.name, new ClassInfo(r3.name));
+        if (r3 == null) return null;
         if (ST.lookupClass(r3.name) == null){  // in "class B extends A", if A is not defined previously then error
             this.detectedSemanticError = true;
             this.errorMsg = "class " + r3.name + " has not been defined yet in \"class " + r1.name + " extends " + r3.name + "\"";
             return null;
         }
+        ST.putClass(r1.name, new ClassInfo(r3.name));
         n.f4.accept(this, null);
-        n.f5.accept(this, new ParameterInfo(r1.name, r3.name));
-        n.f6.accept(this, new ParameterInfo(r1.name, r3.name));
+        n.f5.accept(this, new ParameterInfo(r1.name, r3.name, "class"));
+        n.f6.accept(this, new ParameterInfo(r1.name, r3.name, "class"));
         n.f7.accept(this, null);
         return null;
     }
@@ -138,11 +149,25 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     */
     public ReturnInfo visit(VarDeclaration n, ParameterInfo argu) {
         if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
+        ReturnInfo r0 = n.f0.accept(this, null);
+        ReturnInfo r1 = n.f1.accept(this, null);
+        if (r0 == null || r1 == null) return null;
+        switch(argu.type){
+            case "mainclass":
+                ST.putMainVariable(r1.name, (r0.type == TypeEnum.CUSTOM) ? new VariableInfo(r0.type, r0.name) : new VariableInfo(r0.type));
+                break;
+            case "class":
+                ST.putField(argu.name, r1.name, (r0.type == TypeEnum.CUSTOM) ? new VariableInfo(r0.type, r0.name) : new VariableInfo(r0.type));
+                break;
+            case "method":
+                ST.putVariable(argu.supername, argu.name, r1.name, (r0.type == TypeEnum.CUSTOM) ? new VariableInfo(r0.type, r0.name) : new VariableInfo(r0.type));
+                break;
+            default:
+                System.err.println("Error: invalid type parameter in visit(VarDeclaration)! Please debug...");
+                return null;
+        }
         n.f2.accept(this, null);
-        return _ret;
+        return null;
     }
 
     /**
@@ -162,21 +187,22 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     */
     public ReturnInfo visit(MethodDeclaration n, ParameterInfo argu) {
         if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
         n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
+        ReturnInfo r1 = n.f1.accept(this, null);
+        ReturnInfo r2 = n.f2.accept(this, null);
+        if (r1 == null || r2 == null) return null;
+        ST.putMethod(argu.name, r2.name, new MethodInfo(r1.type));
         n.f3.accept(this, null);
-        n.f4.accept(this, null);
+        n.f4.accept(this, new ParameterInfo(r2.name, argu.name,"method"));
         n.f5.accept(this, null);
         n.f6.accept(this, null);
-        n.f7.accept(this, null);
+        n.f7.accept(this, new ParameterInfo(r2.name, argu.name,"method"));
         n.f8.accept(this, null);
         n.f9.accept(this, null);
         n.f10.accept(this, null);
         n.f11.accept(this, null);
         n.f12.accept(this, null);
-        return _ret;
+        return null;
     }
 
     /**
@@ -185,10 +211,9 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     */
     public ReturnInfo visit(FormalParameterList n, ParameterInfo argu) {
         if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        return _ret;
+        n.f0.accept(this, argu);
+        n.f1.accept(this, argu);
+        return null;
     }
 
     /**
@@ -197,10 +222,11 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     */
     public ReturnInfo visit(FormalParameter n, ParameterInfo argu) {
         if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        return _ret;
+        ReturnInfo r0 = n.f0.accept(this, null);
+        ReturnInfo r1 = n.f1.accept(this, null);
+        if (r0 == null || r1 == null) return null;
+        ST.putVariable(argu.supername, argu.name, r1.name, (r0.type == TypeEnum.CUSTOM) ? new VariableInfo(r0.type, r0.name) : new VariableInfo(r0.type));
+        return null;
     }
 
     /**
@@ -208,7 +234,8 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     */
     public ReturnInfo visit(FormalParameterTail n, ParameterInfo argu) {
         if (detectedSemanticError) return null;
-        return n.f0.accept(this, null);
+        n.f0.accept(this, argu);
+        return null;
     }
 
     /**
@@ -217,10 +244,9 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     */
     public ReturnInfo visit(FormalParameterTerm n, ParameterInfo argu) {
         if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
         n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        return _ret;
+        n.f1.accept(this, argu);
+        return null;
     }
 
     /**
@@ -231,7 +257,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     */
     public ReturnInfo visit(Type n, ParameterInfo argu) {
         if (detectedSemanticError) return null;
-        return n.f0.accept(this, null);
+        return n.f0.accept(this, new ParameterInfo(null, "getType"));  // getType is used in Identifier()'s visit() for custom types
     }
 
     /**
@@ -241,11 +267,10 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     */
     public ReturnInfo visit(ArrayType n, ParameterInfo argu) {
         if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
         n.f0.accept(this, null);
         n.f1.accept(this, null);
         n.f2.accept(this, null);
-        return _ret;
+        return new ReturnInfo(TypeEnum.INTARRAY);
     }
 
     /**
@@ -253,7 +278,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     */
     public ReturnInfo visit(BooleanType n, ParameterInfo argu) {
         if (detectedSemanticError) return null;
-        return n.f0.accept(this, null);
+        return new ReturnInfo(TypeEnum.BOOLEAN);
     }
 
     /**
@@ -261,420 +286,15 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     */
     public ReturnInfo visit(IntegerType n, ParameterInfo argu) {
         if (detectedSemanticError) return null;
-        return n.f0.accept(this, null);
-    }
-
-    /**
-    * f0 -> Block()
-    *       | AssignmentStatement()
-    *       | ArrayAssignmentStatement()
-    *       | IfStatement()
-    *       | WhileStatement()
-    *       | PrintStatement()
-    */
-    public ReturnInfo visit(Statement n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        return n.f0.accept(this, null);
-    }
-
-    /**
-    * f0 -> "{"
-    * f1 -> ( Statement() )*
-    * f2 -> "}"
-    */
-    public ReturnInfo visit(Block n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> Identifier()
-    * f1 -> "="
-    * f2 -> Expression()
-    * f3 -> ";"
-    */
-    public ReturnInfo visit(AssignmentStatement n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        n.f3.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> Identifier()
-    * f1 -> "["
-    * f2 -> Expression()
-    * f3 -> "]"
-    * f4 -> "="
-    * f5 -> Expression()
-    * f6 -> ";"
-    */
-    public ReturnInfo visit(ArrayAssignmentStatement n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        n.f3.accept(this, null);
-        n.f4.accept(this, null);
-        n.f5.accept(this, null);
-        n.f6.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> "if"
-    * f1 -> "("
-    * f2 -> Expression()
-    * f3 -> ")"
-    * f4 -> Statement()
-    * f5 -> "else"
-    * f6 -> Statement()
-    */
-    public ReturnInfo visit(IfStatement n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        n.f3.accept(this, null);
-        n.f4.accept(this, null);
-        n.f5.accept(this, null);
-        n.f6.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> "while"
-    * f1 -> "("
-    * f2 -> Expression()
-    * f3 -> ")"
-    * f4 -> Statement()
-    */
-    public ReturnInfo visit(WhileStatement n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        n.f3.accept(this, null);
-        n.f4.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> "System.out.println"
-    * f1 -> "("
-    * f2 -> Expression()
-    * f3 -> ")"
-    * f4 -> ";"
-    */
-    public ReturnInfo visit(PrintStatement n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        n.f3.accept(this, null);
-        n.f4.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> AndExpression()
-    *       | CompareExpression()
-    *       | PlusExpression()
-    *       | MinusExpression()
-    *       | TimesExpression()
-    *       | ArrayLookup()
-    *       | ArrayLength()
-    *       | MessageSend()
-    *       | Clause()
-    */
-    public ReturnInfo visit(Expression n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        return n.f0.accept(this, null);
-    }
-
-    /**
-    * f0 -> Clause()
-    * f1 -> "&&"
-    * f2 -> Clause()
-    */
-    public ReturnInfo visit(AndExpression n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> PrimaryExpression()
-    * f1 -> "<"
-    * f2 -> PrimaryExpression()
-    */
-    public ReturnInfo visit(CompareExpression n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> PrimaryExpression()
-    * f1 -> "+"
-    * f2 -> PrimaryExpression()
-    */
-    public ReturnInfo visit(PlusExpression n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> PrimaryExpression()
-    * f1 -> "-"
-    * f2 -> PrimaryExpression()
-    */
-    public ReturnInfo visit(MinusExpression n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> PrimaryExpression()
-    * f1 -> "*"
-    * f2 -> PrimaryExpression()
-    */
-    public ReturnInfo visit(TimesExpression n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> PrimaryExpression()
-    * f1 -> "["
-    * f2 -> PrimaryExpression()
-    * f3 -> "]"
-    */
-    public ReturnInfo visit(ArrayLookup n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        n.f3.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> PrimaryExpression()
-    * f1 -> "."
-    * f2 -> "length"
-    */
-    public ReturnInfo visit(ArrayLength n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> PrimaryExpression()
-    * f1 -> "."
-    * f2 -> Identifier()
-    * f3 -> "("
-    * f4 -> ( ExpressionList() )?
-    * f5 -> ")"
-    */
-    public ReturnInfo visit(MessageSend n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        n.f3.accept(this, null);
-        n.f4.accept(this, null);
-        n.f5.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> Expression()
-    * f1 -> ExpressionTail()
-    */
-    public ReturnInfo visit(ExpressionList n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> ( ExpressionTerm() )*
-    */
-    public ReturnInfo visit(ExpressionTail n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        return n.f0.accept(this, null);
-    }
-
-    /**
-    * f0 -> ","
-    * f1 -> Expression()
-    */
-    public ReturnInfo visit(ExpressionTerm n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> NotExpression()
-    *       | PrimaryExpression()
-    */
-    public ReturnInfo visit(Clause n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        return n.f0.accept(this, null);
-    }
-
-    /**
-    * f0 -> IntegerLiteral()
-    *       | TrueLiteral()
-    *       | FalseLiteral()
-    *       | Identifier()
-    *       | ThisExpression()
-    *       | ArrayAllocationExpression()
-    *       | AllocationExpression()
-    *       | BracketExpression()
-    */
-    public ReturnInfo visit(PrimaryExpression n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        return n.f0.accept(this, null);
-    }
-
-    /**
-    * f0 -> <INTEGER_LITERAL>
-    */
-    public ReturnInfo visit(IntegerLiteral n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        return n.f0.accept(this, null);
-    }
-
-    /**
-    * f0 -> "true"
-    */
-    public ReturnInfo visit(TrueLiteral n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        return n.f0.accept(this, null);
-    }
-
-    /**
-    * f0 -> "false"
-    */
-    public ReturnInfo visit(FalseLiteral n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        return n.f0.accept(this, null);
+        return new ReturnInfo(TypeEnum.INTEGER);
     }
 
     /**
     * f0 -> <IDENTIFIER>
     */
     public ReturnInfo visit(Identifier n, ParameterInfo argu) {
-        return new ReturnInfo(n.f0.toString());
-    }
-
-    /**
-    * f0 -> "this"
-    */
-    public ReturnInfo visit(ThisExpression n, ParameterInfo argu) {
-        return null;
-    }
-
-    /**
-    * f0 -> "new"
-    * f1 -> "int"
-    * f2 -> "["
-    * f3 -> Expression()
-    * f4 -> "]"
-    */
-    public ReturnInfo visit(ArrayAllocationExpression n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        n.f3.accept(this, null);
-        n.f4.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> "new"
-    * f1 -> Identifier()
-    * f2 -> "("
-    * f3 -> ")"
-    */
-    public ReturnInfo visit(AllocationExpression n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        n.f3.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> "!"
-    * f1 -> Clause()
-    */
-    public ReturnInfo visit(NotExpression n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        return _ret;
-    }
-
-    /**
-    * f0 -> "("
-    * f1 -> Expression()
-    * f2 -> ")"
-    */
-    public ReturnInfo visit(BracketExpression n, ParameterInfo argu) {
-        if (detectedSemanticError) return null;
-        ReturnInfo _ret=null;
-        n.f0.accept(this, null);
-        n.f1.accept(this, null);
-        n.f2.accept(this, null);
-        return _ret;
+        if (argu != null && argu.type.equals("getType")) return new ReturnInfo(n.f0.toString(), TypeEnum.CUSTOM);
+        else return new ReturnInfo(n.f0.toString());
     }
 
 }

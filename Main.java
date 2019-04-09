@@ -25,7 +25,9 @@ class Main {
 
 			    // TODO: more semantic checks on Symbol Table
 
-			    System.out.println("Semantic check OK!");
+			    System.out.println("Semantic check OK!\n");
+
+				symbolTable.printDebugInfo();
 			}
 			catch(ParseException ex){
 			    System.out.println("Parsing error: " + ex.getMessage());

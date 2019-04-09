@@ -1,3 +1,5 @@
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -17,15 +19,27 @@ import java.util.HashMap;
 
 
 enum TypeEnum {
-	INTEGER, BOOLEAN, INTARRAY;
+	INTEGER, BOOLEAN, INTARRAY, CUSTOM
 }
 
 
 class VariableInfo {
 	private TypeEnum type;
+	private String customTypeName = null;
 
 	public VariableInfo(TypeEnum _type) { type = _type; }
+	public VariableInfo(TypeEnum _type, String _customTypeName) {
+		type = _type;
+		customTypeName = _customTypeName;
+	}
 	public TypeEnum getType() { return type; }
+
+	////////////////////////
+	////     DEBUG     /////
+	////////////////////////
+	public void printDebugInfo(boolean onemoreindent) {
+		System.out.println("      " + ((onemoreindent) ? "      " : "") + "> variable_type = " + type + ((type == TypeEnum.CUSTOM) ? " -> " + customTypeName : ""));
+	}
 }
 
 class MethodInfo {
@@ -44,6 +58,18 @@ class MethodInfo {
 		variables.put(variableName, variableInfo);
 		return true;
 	}
+
+	////////////////////////
+	////     DEBUG     /////
+	////////////////////////
+	public void printDebugInfo() {
+		System.out.println("      > return_type = " + returnType);
+		for (Map.Entry<String, VariableInfo> entry : variables.entrySet()) {
+			System.out.println("         > variable_name = " + entry.getKey());
+			VariableInfo variableInfo = entry.getValue();
+			variableInfo.printDebugInfo(true);
+		}
+	}
 }
 
 class ClassInfo {
@@ -51,38 +77,65 @@ class ClassInfo {
 	private Map<String, MethodInfo> methods = new HashMap<String, MethodInfo>();        // method name -> MethodInfo
 	private String motherClassName = null;    // name of the class this class extends (if it extends one)
 
-	public ClassInfo(){ }
-	public ClassInfo(String _motherClassName) { motherClassName = _motherClassName; }
+	public ClassInfo() {
+	}
+
+	public ClassInfo(String _motherClassName) {
+		motherClassName = _motherClassName;
+	}
 
 	public VariableInfo getFieldInfo(String fieldName) {
 		return fields.get(fieldName);
 	}
 
-	public MethodInfo getMethodInfo(String methodName){
+	public MethodInfo getMethodInfo(String methodName) {
 		return methods.get(methodName);
 	}
 
-	public String getMotherClassName(){
+	public String getMotherClassName() {
 		return motherClassName;
 	}
 
-	public boolean putFieldInfo(String fieldName, VariableInfo fieldInfo){
-		if ( fields.containsKey(fieldName) ){ return false; }
+	public boolean putFieldInfo(String fieldName, VariableInfo fieldInfo) {
+		if (fields.containsKey(fieldName)) {
+			return false;
+		}
 		fields.put(fieldName, fieldInfo);
 		return true;
 	}
 
-	public boolean putMethodInfo(String methodName, MethodInfo methodInfo){
-		if ( methods.containsKey(methodName) ){ return false; }
+	public boolean putMethodInfo(String methodName, MethodInfo methodInfo) {
+		if (methods.containsKey(methodName)) {
+			return false;
+		}
 		methods.put(methodName, methodInfo);
 		return true;
 	}
 
-	public boolean setMotherClassName(String _motherClassName){
-		if (motherClassName == null){
+	public boolean setMotherClassName(String _motherClassName) {
+		if (motherClassName == null) {
 			motherClassName = _motherClassName;
 			return true;
 		} else return false;
+	}
+
+	////////////////////////
+	////     DEBUG     /////
+	////////////////////////
+	public void printDebugInfo() {
+		if (getMotherClassName() != null) {
+			System.out.println("  mother_class = " + getMotherClassName());
+		}
+		for (Map.Entry<String, VariableInfo> entry : fields.entrySet()) {
+			System.out.println("   > field_name = " + entry.getKey());
+			VariableInfo fieldInfo = entry.getValue();
+			fieldInfo.printDebugInfo(false);
+		}
+		for (Map.Entry<String, MethodInfo> entry : methods.entrySet()) {
+			System.out.println("   > method_name = " + entry.getKey());
+			MethodInfo methodInfo = entry.getValue();
+			methodInfo.printDebugInfo();
+		}
 	}
 }
 
@@ -92,6 +145,7 @@ public class SymbolTable {
 	// Main class:
 	private String mainClassName = null;
 	private String mainClassArgName = null;
+	private Map<String, VariableInfo> mainMethodVariables = new HashMap<String, VariableInfo>();
 
 	public String getMainClassName() { return mainClassName; }
 	public String getMainClassArgName() { return mainClassArgName; }
@@ -108,6 +162,12 @@ public class SymbolTable {
 			mainClassArgName = _mainClassArgName;
 			return true;
 		} else return false;
+	}
+
+	public boolean putMainVariable(String variableName, VariableInfo variableInfo){
+		if ( mainMethodVariables.containsKey(variableName) ) return false;
+		mainMethodVariables.put(variableName, variableInfo);
+		return true;
 	}
 
 	public boolean putVariable(String className, String methodName, String variableName, VariableInfo variableInfo){
@@ -135,9 +195,13 @@ public class SymbolTable {
 	}
 
 	public boolean putClass(String className, ClassInfo classInfo){
-		if ( classes.containsKey(className) ){ return false; }
+		if ( classes.containsKey(className) ) return false;
 		classes.put(className, classInfo);
 		return true;
+	}
+
+	public VariableInfo lookupMainVariable(String variableName){
+		return mainMethodVariables.get(variableName);
 	}
 
 	public VariableInfo lookupVariable(String className, String methodName, String variableName){
@@ -160,5 +224,19 @@ public class SymbolTable {
 
 	public ClassInfo lookupClass(String className){
 		return classes.get(className);
+	}
+
+	////////////////////////
+	////     DEBUG     /////
+	////////////////////////
+	public void printDebugInfo(){
+		System.out.println("Main class: name = " + mainClassName + ", args_name = " + mainClassArgName + "\nMain method variables are: ");
+		System.out.println(Collections.singletonList(mainMethodVariables));
+		System.out.println("Statistics for classes are: ");
+		for (Map.Entry<String, ClassInfo> entry : classes.entrySet()) {
+			System.out.println("> class_name = " + entry.getKey());
+			ClassInfo classInfo = entry.getValue();
+			classInfo.printDebugInfo();
+		}
 	}
 }
