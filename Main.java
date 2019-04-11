@@ -19,15 +19,24 @@ class Main {
 			    Goal root = parser.Goal();
 			    root.accept(STVisitor, null);
 			    if (STVisitor.detectedSemanticError) {
-			    	System.out.println((STVisitor.errorMsg.equals("")) ? "Semantic error" : "Semantic error: " + STVisitor.errorMsg);
+			    	System.out.println((STVisitor.errorMsg.equals("")) ? "Semantic error(1)" : "Semantic error(1): " + STVisitor.errorMsg);
 			    	continue;
 			    }
-
-			    // TODO: more semantic checks on Symbol Table
-
+			    // The Symbol Table has now been created //
+				if ( symbolTable.checkForCyclicInheritance() ){
+					System.out.println("Semantic error: Cyclic Inheritance detected");
+					continue;
+				}
+			    SemanticCheckingVisitor SCVisitor = new SemanticCheckingVisitor(symbolTable);
+			    root.accept(SCVisitor, null);
+				if (SCVisitor.detectedSemanticError){
+					System.out.println((SCVisitor.errorMsg.equals("")) ? "Semantic error(2)" : "Semantic error(2): " + SCVisitor.errorMsg);
+					continue;
+				}
 			    System.out.println("Semantic check OK!\n");
-
+				// Debug:
 				symbolTable.printDebugInfo();
+				// TODO: print offsets
 			}
 			catch(ParseException ex){
 			    System.out.println("Parsing error: " + ex.getMessage());

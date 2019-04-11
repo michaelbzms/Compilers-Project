@@ -228,6 +228,17 @@ public class SymbolTable {
 		return classes.get(className);
 	}
 
+
+	//////////////////////////////
+	////  SEMANTIC CHECKING  /////
+	//////////////////////////////
+
+	public boolean checkForCyclicInheritance(){
+		//TODO
+		return false;
+	}
+
+
 	////////////////////////
 	////     DEBUG     /////
 	////////////////////////

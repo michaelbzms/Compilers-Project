@@ -1,38 +1,8 @@
 import syntaxtree.*;
 import visitor.GJDepthFirst;
 
-class ReturnInfo {
-    public String name = null;
-    public TypeEnum type = null;
-    public ReturnInfo(String _name){
-        name = _name;
-    }
-    public ReturnInfo(TypeEnum _type){
-        type = _type;
-    }
-    public ReturnInfo(String _name, TypeEnum _type){
-        name = _name;
-        type = _type;
-    }
-}
 
-class ParameterInfo{
-    public String name;
-    public String supername = null;
-    public String type;
-    public ParameterInfo(String _name, String _type){
-        name = _name; type=_type;
-    }
-    public ParameterInfo(String _name, String _supername, String _type){
-        name = _name;
-        supername = _supername;
-        type = _type;
-    }
-}
-
-
-
-public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, ParameterInfo> {
+public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, VisitorParameterInfo> {
 
     public boolean detectedSemanticError = false;
     public String errorMsg = "";
@@ -64,9 +34,9 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     * f16 -> "}"
     * f17 -> "}"
     */
-    public ReturnInfo visit(MainClass n, ParameterInfo argu)  {
+    public VisitorReturnInfo visit(MainClass n, VisitorParameterInfo argu)  {
         n.f0.accept(this, null);
-        ReturnInfo r1 = n.f1.accept(this, null);      // r1 -> main class name
+        VisitorReturnInfo r1 = n.f1.accept(this, null);      // r1 -> main class name
         if (r1 == null) return null;
         ST.setMainClassName(r1.name);
         n.f2.accept(this, null);
@@ -78,12 +48,12 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
         n.f8.accept(this, null);
         n.f9.accept(this, null);
         n.f10.accept(this, null);
-        ReturnInfo r11 = n.f11.accept(this, null);   // r11 -> name of main()'s String[] args variable
+        VisitorReturnInfo r11 = n.f11.accept(this, null);   // r11 -> name of main()'s String[] args variable
         if (r11 == null) return null;
         ST.setMainClassArgName(r11.name);
         n.f12.accept(this, null);
         n.f13.accept(this, null);
-        n.f14.accept(this, new ParameterInfo(null, "mainclass"));
+        n.f14.accept(this, new VisitorParameterInfo(null, "mainclass"));
         n.f15.accept(this, null);
         n.f16.accept(this, null);
         n.f17.accept(this, null);
@@ -98,10 +68,10 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     * f4 -> ( MethodDeclaration() )*
     * f5 -> "}"
     */
-    public ReturnInfo visit(ClassDeclaration n, ParameterInfo argu) {
+    public VisitorReturnInfo visit(ClassDeclaration n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
         n.f0.accept(this, null);
-        ReturnInfo r1 = n.f1.accept(this, null);
+        VisitorReturnInfo r1 = n.f1.accept(this, null);
         if (r1 == null) return null;
         if (!ST.putClass(r1.name, new ClassInfo())){
             this.detectedSemanticError = true;
@@ -109,8 +79,8 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
             return null;
         }
         n.f2.accept(this, null);
-        n.f3.accept(this, new ParameterInfo(r1.name, "class"));
-        n.f4.accept(this, new ParameterInfo(r1.name, "class"));
+        n.f3.accept(this, new VisitorParameterInfo(r1.name, "class"));
+        n.f4.accept(this, new VisitorParameterInfo(r1.name, "class"));
         n.f5.accept(this, null);
         return null;
     }
@@ -125,13 +95,13 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     * f6 -> ( MethodDeclaration() )*
     * f7 -> "}"
     */
-    public ReturnInfo visit(ClassExtendsDeclaration n, ParameterInfo argu) {
+    public VisitorReturnInfo visit(ClassExtendsDeclaration n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
         n.f0.accept(this, null);
-        ReturnInfo r1 = n.f1.accept(this, null);
+        VisitorReturnInfo r1 = n.f1.accept(this, null);
         if (r1 == null) return null;
         n.f2.accept(this, null);
-        ReturnInfo r3 = n.f3.accept(this, null);
+        VisitorReturnInfo r3 = n.f3.accept(this, null);
         if (r3 == null) return null;
         if (ST.lookupClass(r3.name) == null){  // in "class B extends A", if A is not defined previously then error
             this.detectedSemanticError = true;
@@ -144,8 +114,8 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
             return null;
         }
         n.f4.accept(this, null);
-        n.f5.accept(this, new ParameterInfo(r1.name, r3.name, "class"));
-        n.f6.accept(this, new ParameterInfo(r1.name, r3.name, "class"));
+        n.f5.accept(this, new VisitorParameterInfo(r1.name, r3.name, "class"));
+        n.f6.accept(this, new VisitorParameterInfo(r1.name, r3.name, "class"));
         n.f7.accept(this, null);
         return null;
     }
@@ -155,10 +125,10 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     * f1 -> Identifier()
     * f2 -> ";"
     */
-    public ReturnInfo visit(VarDeclaration n, ParameterInfo argu) {
+    public VisitorReturnInfo visit(VarDeclaration n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        ReturnInfo r0 = n.f0.accept(this, null);
-        ReturnInfo r1 = n.f1.accept(this, null);
+        VisitorReturnInfo r0 = n.f0.accept(this, null);
+        VisitorReturnInfo r1 = n.f1.accept(this, null);
         if (r0 == null || r1 == null) return null;
         boolean feedback;
         switch(argu.type){
@@ -209,11 +179,11 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     * f11 -> ";"
     * f12 -> "}"
     */
-    public ReturnInfo visit(MethodDeclaration n, ParameterInfo argu) {
+    public VisitorReturnInfo visit(MethodDeclaration n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
         n.f0.accept(this, null);
-        ReturnInfo r1 = n.f1.accept(this, null);
-        ReturnInfo r2 = n.f2.accept(this, null);
+        VisitorReturnInfo r1 = n.f1.accept(this, null);
+        VisitorReturnInfo r2 = n.f2.accept(this, null);
         if (r1 == null || r2 == null) return null;
         if (!ST.putMethod(argu.name, r2.name, new MethodInfo(r1.type))){
             this.detectedSemanticError = true;
@@ -221,10 +191,10 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
             return null;
         }
         n.f3.accept(this, null);
-        n.f4.accept(this, new ParameterInfo(r2.name, argu.name,"method"));
+        n.f4.accept(this, new VisitorParameterInfo(r2.name, argu.name,"method"));
         n.f5.accept(this, null);
         n.f6.accept(this, null);
-        n.f7.accept(this, new ParameterInfo(r2.name, argu.name,"method"));
+        n.f7.accept(this, new VisitorParameterInfo(r2.name, argu.name,"method"));
         n.f8.accept(this, null);
         n.f9.accept(this, null);
         n.f10.accept(this, null);
@@ -237,7 +207,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     * f0 -> FormalParameter()
     * f1 -> FormalParameterTail()
     */
-    public ReturnInfo visit(FormalParameterList n, ParameterInfo argu) {
+    public VisitorReturnInfo visit(FormalParameterList n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
@@ -248,10 +218,10 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     * f0 -> Type()
     * f1 -> Identifier()
     */
-    public ReturnInfo visit(FormalParameter n, ParameterInfo argu) {
+    public VisitorReturnInfo visit(FormalParameter n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        ReturnInfo r0 = n.f0.accept(this, null);
-        ReturnInfo r1 = n.f1.accept(this, null);
+        VisitorReturnInfo r0 = n.f0.accept(this, null);
+        VisitorReturnInfo r1 = n.f1.accept(this, null);
         if (r0 == null || r1 == null) return null;
         boolean feedback = ST.putVariable(argu.supername, argu.name, r1.name, (r0.type == TypeEnum.CUSTOM) ? new VariableInfo(r0.type, r0.name) : new VariableInfo(r0.type));
         if (!feedback){
@@ -265,7 +235,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     /**
     * f0 -> ( FormalParameterTerm() )*
     */
-    public ReturnInfo visit(FormalParameterTail n, ParameterInfo argu) {
+    public VisitorReturnInfo visit(FormalParameterTail n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
         n.f0.accept(this, argu);
         return null;
@@ -275,7 +245,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     * f0 -> ","
     * f1 -> FormalParameter()
     */
-    public ReturnInfo visit(FormalParameterTerm n, ParameterInfo argu) {
+    public VisitorReturnInfo visit(FormalParameterTerm n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
         n.f0.accept(this, null);
         n.f1.accept(this, argu);
@@ -288,9 +258,9 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     *       | IntegerType()
     *       | Identifier()
     */
-    public ReturnInfo visit(Type n, ParameterInfo argu) {
+    public VisitorReturnInfo visit(Type n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        return n.f0.accept(this, new ParameterInfo(null, "getType"));  // getType is used in Identifier()'s visit() for custom types
+        return n.f0.accept(this, new VisitorParameterInfo(null, "getType"));  // getType is used in Identifier()'s visit() for custom types
     }
 
     /**
@@ -298,36 +268,37 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<ReturnInfo, Parameter
     * f1 -> "["
     * f2 -> "]"
     */
-    public ReturnInfo visit(ArrayType n, ParameterInfo argu) {
+    public VisitorReturnInfo visit(ArrayType n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
         n.f0.accept(this, null);
         n.f1.accept(this, null);
         n.f2.accept(this, null);
-        return new ReturnInfo(TypeEnum.INTARRAY);
+        return new VisitorReturnInfo(TypeEnum.INTARRAY);
     }
 
     /**
     * f0 -> "boolean"
     */
-    public ReturnInfo visit(BooleanType n, ParameterInfo argu) {
+    public VisitorReturnInfo visit(BooleanType n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        return new ReturnInfo(TypeEnum.BOOLEAN);
+        return new VisitorReturnInfo(TypeEnum.BOOLEAN);
     }
 
     /**
     * f0 -> "int"
     */
-    public ReturnInfo visit(IntegerType n, ParameterInfo argu) {
+    public VisitorReturnInfo visit(IntegerType n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        return new ReturnInfo(TypeEnum.INTEGER);
+        return new VisitorReturnInfo(TypeEnum.INTEGER);
     }
 
     /**
     * f0 -> <IDENTIFIER>
     */
-    public ReturnInfo visit(Identifier n, ParameterInfo argu) {
-        if (argu != null && argu.type.equals("getType")) return new ReturnInfo(n.f0.toString(), TypeEnum.CUSTOM);
-        else return new ReturnInfo(n.f0.toString());
+    public VisitorReturnInfo visit(Identifier n, VisitorParameterInfo argu) {
+        if (detectedSemanticError) return null;
+        if (argu != null && argu.type.equals("getType")) return new VisitorReturnInfo(n.f0.toString(), TypeEnum.CUSTOM);
+        else return new VisitorReturnInfo(n.f0.toString());
     }
 
 }
