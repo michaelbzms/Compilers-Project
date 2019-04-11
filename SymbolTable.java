@@ -1,8 +1,4 @@
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
-import java.util.HashMap;
-
+import java.util.*;
 
 /** SymbolTable -> ClassInfo -> MethodInfo -> VariableInfo
  *                           -> VariableInfo (fields)
@@ -73,34 +69,30 @@ class MethodInfo {
 }
 
 class ClassInfo {
-	private Map<String, VariableInfo> fields = new HashMap<String, VariableInfo>();     // field name  -> VariableInfo
-	private Map<String, MethodInfo> methods = new HashMap<String, MethodInfo>();        // method name -> MethodInfo
+	private List<MyPair<String, VariableInfo>> orderedFields = new ArrayList<>();   // used for printing their offsets in order
+	private List<MyPair<String, MethodInfo>> orderedMethods = new ArrayList<>();    // ^^
+	private Map<String, VariableInfo> fields = new HashMap<>();     // field name  -> VariableInfo
+	private Map<String, MethodInfo> methods = new HashMap<>();      // method name -> MethodInfo
 	private String motherClassName = null;    // name of the class this class extends (if it extends one)
 
-	public ClassInfo() {
-	}
+	public ClassInfo() { }
 
 	public ClassInfo(String _motherClassName) {
 		motherClassName = _motherClassName;
 	}
 
-	public VariableInfo getFieldInfo(String fieldName) {
-		return fields.get(fieldName);
-	}
+	public VariableInfo getFieldInfo(String fieldName) { return fields.get(fieldName);}
 
-	public MethodInfo getMethodInfo(String methodName) {
-		return methods.get(methodName);
-	}
+	public MethodInfo getMethodInfo(String methodName) { return methods.get(methodName); }
 
-	public String getMotherClassName() {
-		return motherClassName;
-	}
+	public String getMotherClassName() { return motherClassName; }
 
 	public boolean putFieldInfo(String fieldName, VariableInfo fieldInfo) {
 		if (fields.containsKey(fieldName)) {
 			return false;
 		}
 		fields.put(fieldName, fieldInfo);
+		orderedFields.add(new MyPair<>(fieldName, fieldInfo));
 		return true;
 	}
 
@@ -109,6 +101,7 @@ class ClassInfo {
 			return false;
 		}
 		methods.put(methodName, methodInfo);
+		orderedMethods.add(new MyPair<>(methodName, methodInfo));
 		return true;
 	}
 
@@ -126,6 +119,15 @@ class ClassInfo {
 		if (getMotherClassName() != null) {
 			System.out.println("  mother_class = " + getMotherClassName());
 		}
+		System.out.println("  Fields in order are: ");
+		for (MyPair<String, VariableInfo> node : orderedFields){
+			System.out.print(node.getFirst() + ": " + node.getSecond().getType() + ", ");
+		}
+		System.out.println("$\n  Methods in order are: ");
+		for (MyPair<String, MethodInfo> node : orderedMethods){
+			System.out.print(node.getFirst() + ": " + node.getSecond().getReturnType() + ", ");
+		}
+		System.out.println("$\n");
 		for (Map.Entry<String, VariableInfo> entry : fields.entrySet()) {
 			System.out.println("   > field_name = " + entry.getKey());
 			VariableInfo fieldInfo = entry.getValue();
@@ -231,7 +233,11 @@ public class SymbolTable {
 	////////////////////////
 	public void printDebugInfo(){
 		System.out.println("Main class: name = " + getMainClassName() + ", args_name = " + getMainClassArgName() + "\nMain method variables are: ");
-		System.out.println(Collections.singletonList(mainMethodVariables));
+		for (Map.Entry<String, VariableInfo> entry : mainMethodVariables.entrySet()) {
+			System.out.println("   > variable_bame = " + entry.getKey());
+			VariableInfo variableInfo = entry.getValue();
+			variableInfo.printDebugInfo(false);
+		}
 		System.out.println("Statistics for classes are: ");
 		for (Map.Entry<String, ClassInfo> entry : classes.entrySet()) {
 			System.out.println("> class_name = " + entry.getKey());
