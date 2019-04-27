@@ -29,6 +29,7 @@ class VariableInfo {
 		customTypeName = _customTypeName;
 	}
 	public TypeEnum getType() { return type; }
+	public String getCustomTypeName() { return customTypeName; }
 
 	////////////////////////
 	////     DEBUG     /////
