@@ -54,7 +54,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         n.f12.accept(this, null);
         n.f13.accept(this, null);
         n.f14.accept(this, new VisitorParameterInfo(null, "mainclass"));
-        n.f15.accept(this, null);
+        //n.f15.accept(this, null);   // no need to check statements
         n.f16.accept(this, null);
         n.f17.accept(this, null);
         return null;
@@ -195,7 +195,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         n.f5.accept(this, null);
         n.f6.accept(this, null);
         n.f7.accept(this, new VisitorParameterInfo(r2.name, argu.name,"method"));
-        n.f8.accept(this, null);
+        //n.f8.accept(this, null);   // no need to check statements
         n.f9.accept(this, null);
         n.f10.accept(this, null);
         n.f11.accept(this, null);

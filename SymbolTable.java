@@ -41,10 +41,13 @@ class VariableInfo {
 
 class MethodInfo {
 	private TypeEnum returnType;
+	private String customReturnTypeName = null;
 	private Map<String, VariableInfo> variables = new HashMap<String, VariableInfo>();  // variable name -> Variable Info
 
 	public MethodInfo(TypeEnum _returnType){ returnType = _returnType; }
+
 	public TypeEnum getReturnType() { return returnType; }
+	public String getCustomReturnTypeName() { return customReturnTypeName; }
 
 	public VariableInfo getVariableInfo(String variableName){
 		return variables.get(variableName);
