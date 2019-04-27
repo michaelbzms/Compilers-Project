@@ -181,7 +181,18 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         n.f7.accept(this, argu);
         n.f8.accept(this, new VisitorParameterInfo(r2.name, argu.name, "method"));   // pass method name, class name
         n.f9.accept(this, argu);
-        n.f10.accept(this, new VisitorParameterInfo(r2.name, argu.name, "method"));  // pass method name, class name
+        VisitorReturnInfo r10 = n.f10.accept(this, new VisitorParameterInfo(r2.name, argu.name, "method"));  // pass method name, class name
+        if (r10 == null) return null;
+
+        // check that expression is of the method's return type
+        MethodInfo methodInfo = ST.lookupMethod(argu.name, r2.name);
+        if (methodInfo == null) { System.err.println("Warning: Missing method from SymbolTable?"); return null; }
+        if ( !checkType(r10, methodInfo.getReturnType()) ){
+            this.detectedSemanticError = true;
+            this.errorMsg = "Invalid return type of the method \"" + r2.name + "\": " + (r10.type != TypeEnum.CUSTOM ? r10.type : r10.name) + " instead of " + (methodInfo.getReturnType() != TypeEnum.CUSTOM ? methodInfo.getReturnType() : methodInfo.getCustomReturnTypeName());
+            return null;
+        }
+
         n.f11.accept(this, argu);
         n.f12.accept(this, argu);
         return null;
@@ -656,13 +667,35 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
                 methodInfo = ST.lookupMethod(argu.name, r2.name);
                 if (methodInfo == null){
                     this.detectedSemanticError = true;
-                    this.errorMsg = "Class \"" + argu.name + "\" does not have a method \"" + r2.name + "\"";
+                    this.errorMsg = "Class \"" + argu.supername + "\" does not have a method \"" + r2.name + "\"";
                     return null;
                 }
             } else { System.err.println("Warning: invalid arguments"); return null; }
         } else if (r0.name != null){
-            // check that variable exists in context and that it has that method
-            // TODO
+            // check that variable exists in context
+            VariableInfo varInfo;
+            if (argu.type == "main"){
+                varInfo = ST.lookupMainVariable(r0.name);
+            } else if (argu.type == "method") {
+                varInfo = ST.lookupVariable(argu.supername, argu.name, r0.name);
+            } else { System.err.println("Warning: invalid arguments"); return null; }
+            if (varInfo == null) {
+                this.detectedSemanticError = true;
+                this.errorMsg = "Use of undeclared variable \"" + r0.name + "\" in method \"" + argu.name + "\" of the class \"" + argu.supername + "\"";
+                return null;
+            }
+            // and that its class has that method
+            if (varInfo.getType() != TypeEnum.CUSTOM){
+                this.detectedSemanticError = true;
+                this.errorMsg = "Calling a method on non-object " + (r0.name != null ? " \"" + r0.name + "\"" : "");
+                return null;
+            }
+            methodInfo = ST.lookupMethod(varInfo.getCustomTypeName(), r2.name);
+            if (methodInfo == null){
+                this.detectedSemanticError = true;
+                this.errorMsg = "Class \"" + varInfo.getCustomTypeName() + "\" does not have a method \"" + r2.name + "\"";
+                return null;
+            }
         } else {
             System.err.println("Warning: Unexpected behaviour of method call");
             return null;
