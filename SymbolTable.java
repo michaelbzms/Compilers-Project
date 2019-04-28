@@ -15,7 +15,7 @@ import java.util.*;
 
 
 enum TypeEnum {
-	INTEGER, BOOLEAN, INTARRAY, CUSTOM
+	INTEGER, BOOLEAN, INTARRAY, CUSTOM, MAINSTRING
 }
 
 
@@ -207,7 +207,8 @@ public class SymbolTable {
 	}
 
 	public VariableInfo lookupMainVariable(String variableName){
-		return mainMethodVariables.get(variableName);
+		if (variableName == mainClassArgName) return new VariableInfo(TypeEnum.MAINSTRING);
+		else return mainMethodVariables.get(variableName);
 	}
 
 	public VariableInfo lookupVariable(String className, String methodName, String variableName){

@@ -31,6 +31,8 @@ class Main {
 			    root.accept(SCVisitor, null);
 				if (SCVisitor.detectedSemanticError){
 					System.out.println((SCVisitor.errorMsg.equals("")) ? "Semantic error(2)" : "Semantic error(2): " + SCVisitor.errorMsg);
+					// Debug:
+					symbolTable.printDebugInfo();
 					continue;
 				}
 			    System.out.println("Semantic check OK!\n");

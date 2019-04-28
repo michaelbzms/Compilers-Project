@@ -38,7 +38,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         n.f0.accept(this, null);
         VisitorReturnInfo r1 = n.f1.accept(this, null);      // r1 -> main class name
         if (r1 == null) return null;
-        ST.setMainClassName(r1.name);
+        ST.setMainClassName(r1.getName());
         n.f2.accept(this, null);
         n.f3.accept(this, null);
         n.f4.accept(this, null);
@@ -50,7 +50,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         n.f10.accept(this, null);
         VisitorReturnInfo r11 = n.f11.accept(this, null);   // r11 -> name of main()'s String[] args variable
         if (r11 == null) return null;
-        ST.setMainClassArgName(r11.name);
+        ST.setMainClassArgName(r11.getName());
         n.f12.accept(this, null);
         n.f13.accept(this, null);
         n.f14.accept(this, new VisitorParameterInfo(null, "mainclass"));
@@ -73,14 +73,14 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         n.f0.accept(this, null);
         VisitorReturnInfo r1 = n.f1.accept(this, null);
         if (r1 == null) return null;
-        if (!ST.putClass(r1.name, new ClassInfo())){
+        if (!ST.putClass(r1.getName(), new ClassInfo())){
             this.detectedSemanticError = true;
-            this.errorMsg = "duplicate declaration of class name \"" + r1.name + "\"";
+            this.errorMsg = "duplicate declaration of class name \"" + r1.getName() + "\"";
             return null;
         }
         n.f2.accept(this, null);
-        n.f3.accept(this, new VisitorParameterInfo(r1.name, "class"));
-        n.f4.accept(this, new VisitorParameterInfo(r1.name, "class"));
+        n.f3.accept(this, new VisitorParameterInfo(r1.getName(), "class"));
+        n.f4.accept(this, new VisitorParameterInfo(r1.getName(), "class"));
         n.f5.accept(this, null);
         return null;
     }
@@ -103,19 +103,19 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         n.f2.accept(this, null);
         VisitorReturnInfo r3 = n.f3.accept(this, null);
         if (r3 == null) return null;
-        if (ST.lookupClass(r3.name) == null){  // in "class B extends A", if A is not defined previously then error
+        if (ST.lookupClass(r3.getName()) == null){  // in "class B extends A", if A is not defined previously then error
             this.detectedSemanticError = true;
-            this.errorMsg = "class " + r3.name + " has not been defined yet in \"class " + r1.name + " extends " + r3.name + "\"";
+            this.errorMsg = "class " + r3.getName() + " has not been defined yet in \"class " + r1.getName() + " extends " + r3.getName() + "\"";
             return null;
         }
-        if (!ST.putClass(r1.name, new ClassInfo(r3.name))){
+        if (!ST.putClass(r1.getName(), new ClassInfo(r3.getName()))){
             this.detectedSemanticError = true;
-            this.errorMsg = "duplicate declaration of class name \"" + r1.name + "\"";;
+            this.errorMsg = "duplicate declaration of class name \"" + r1.getName() + "\"";;
             return null;
         }
         n.f4.accept(this, null);
-        n.f5.accept(this, new VisitorParameterInfo(r1.name, r3.name, "class"));
-        n.f6.accept(this, new VisitorParameterInfo(r1.name, r3.name, "class"));
+        n.f5.accept(this, new VisitorParameterInfo(r1.getName(), r3.getName(), "class"));
+        n.f6.accept(this, new VisitorParameterInfo(r1.getName(), r3.getName(), "class"));
         n.f7.accept(this, null);
         return null;
     }
@@ -131,28 +131,28 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         VisitorReturnInfo r1 = n.f1.accept(this, null);
         if (r0 == null || r1 == null) return null;
         boolean feedback;
-        switch(argu.type){
+        switch(argu.getType()){
             case "mainclass":
-                feedback = ST.putMainVariable(r1.name, (r0.type == TypeEnum.CUSTOM) ? new VariableInfo(r0.type, r0.name) : new VariableInfo(r0.type));
+                feedback = ST.putMainVariable(r1.getName(), (r0.getType() == TypeEnum.CUSTOM) ? new VariableInfo(r0.getType(), r0.getName()) : new VariableInfo(r0.getType()));
                 if (!feedback){
                     this.detectedSemanticError = true;
-                    this.errorMsg = "duplicate variable name declaration \"" + r1.name + "\" in the main() method";
+                    this.errorMsg = "duplicate variable name declaration \"" + r1.getName() + "\" in the main() method";
                     return null;
                 }
                 break;
             case "class":
-                feedback = ST.putField(argu.name, r1.name, (r0.type == TypeEnum.CUSTOM) ? new VariableInfo(r0.type, r0.name) : new VariableInfo(r0.type));
+                feedback = ST.putField(argu.getName(), r1.getName(), (r0.getType() == TypeEnum.CUSTOM) ? new VariableInfo(r0.getType(), r0.getName()) : new VariableInfo(r0.getType()));
                 if (!feedback){
                     this.detectedSemanticError = true;
-                    this.errorMsg = "duplicate field name declaration \"" + r1.name + "\" in the class \"" + argu.name + "\"";
+                    this.errorMsg = "duplicate field name declaration \"" + r1.getName() + "\" in the class \"" + argu.getName() + "\"";
                     return null;
                 }
                 break;
             case "method":
-                feedback = ST.putVariable(argu.supername, argu.name, r1.name, (r0.type == TypeEnum.CUSTOM) ? new VariableInfo(r0.type, r0.name) : new VariableInfo(r0.type));
+                feedback = ST.putVariable(argu.getSupername(), argu.getName(), r1.getName(), (r0.getType() == TypeEnum.CUSTOM) ? new VariableInfo(r0.getType(), r0.getName()) : new VariableInfo(r0.getType()));
                 if (!feedback){
                     this.detectedSemanticError = true;
-                    this.errorMsg = "duplicate variable name declaration \"" + r1.name + "\" in the method \"" + argu.name + "\" of the class \"" + argu.supername + "\"";
+                    this.errorMsg = "duplicate variable name declaration \"" + r1.getName() + "\" in the method \"" + argu.getName() + "\" of the class \"" + argu.getSupername() + "\"";
                     return null;
                 }
                 break;
@@ -185,16 +185,16 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         VisitorReturnInfo r1 = n.f1.accept(this, null);
         VisitorReturnInfo r2 = n.f2.accept(this, null);
         if (r1 == null || r2 == null) return null;
-        if (!ST.putMethod(argu.name, r2.name, new MethodInfo(r1.type))){
+        if (!ST.putMethod(argu.getName(), r2.getName(), new MethodInfo(r1.getType()))){
             this.detectedSemanticError = true;
-            this.errorMsg = "duplicate method name declaration \"" + r2.name + "\" in the class \"" + argu.name + "\"";
+            this.errorMsg = "duplicate method name declaration \"" + r2.getName() + "\" in the class \"" + argu.getName() + "\"";
             return null;
         }
         n.f3.accept(this, null);
-        n.f4.accept(this, new VisitorParameterInfo(r2.name, argu.name,"method"));
+        n.f4.accept(this, new VisitorParameterInfo(r2.getName(), argu.getName(),"method"));
         n.f5.accept(this, null);
         n.f6.accept(this, null);
-        n.f7.accept(this, new VisitorParameterInfo(r2.name, argu.name,"method"));
+        n.f7.accept(this, new VisitorParameterInfo(r2.getName(), argu.getName(),"method"));
         //n.f8.accept(this, null);   // no need to check statements
         n.f9.accept(this, null);
         n.f10.accept(this, null);
@@ -223,10 +223,10 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         VisitorReturnInfo r0 = n.f0.accept(this, null);
         VisitorReturnInfo r1 = n.f1.accept(this, null);
         if (r0 == null || r1 == null) return null;
-        boolean feedback = ST.putVariable(argu.supername, argu.name, r1.name, (r0.type == TypeEnum.CUSTOM) ? new VariableInfo(r0.type, r0.name) : new VariableInfo(r0.type));
+        boolean feedback = ST.putVariable(argu.getSupername(), argu.getName(), r1.getName(), (r0.getType() == TypeEnum.CUSTOM) ? new VariableInfo(r0.getType(), r0.getName()) : new VariableInfo(r0.getType()));
         if (!feedback){
             this.detectedSemanticError = true;
-            this.errorMsg = "duplicate parameter name \"" + r1.name + "\" in method \"" + argu.name + "\" of class \"" + argu.supername + "\"";
+            this.errorMsg = "duplicate parameter name \"" + r1.getName() + "\" in method \"" + argu.getName() + "\" of class \"" + argu.getSupername() + "\"";
             return null;
         }
         return null;
@@ -297,7 +297,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
     */
     public VisitorReturnInfo visit(Identifier n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        if (argu != null && argu.type.equals("getType")) return new VisitorReturnInfo(n.f0.toString(), TypeEnum.CUSTOM);
+        if (argu != null && argu.getType().equals("getType")) return new VisitorReturnInfo(n.f0.toString(), TypeEnum.CUSTOM);
         else return new VisitorReturnInfo(n.f0.toString());
     }
 
