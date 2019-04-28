@@ -90,7 +90,6 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(ClassDeclaration n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        VisitorReturnInfo _ret=null;
         n.f0.accept(this, argu);
         VisitorReturnInfo r1 = n.f1.accept(this, argu);
         if (r1 == null) return null;
@@ -98,7 +97,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         n.f3.accept(this, argu);
         n.f4.accept(this, new VisitorParameterInfo(r1.name, "custom"));    // pass class name
         n.f5.accept(this, argu);
-        return _ret;
+        return null;
     }
 
     /**
@@ -350,13 +349,14 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         // check if expression is of the correct type
         if ( !checkType(r2, varInfo.getType(), (varInfo.getType() != TypeEnum.CUSTOM) ? varInfo.getCustomTypeName() : null) ){
             this.detectedSemanticError = true;
-            this.errorMsg = "Incompatible type: \"" + (r2.type == TypeEnum.CUSTOM ? r2.name : r2.type)  +
+            this.errorMsg = "Incompatible assignment type: \"" + (r2.type == TypeEnum.CUSTOM ? r2.name : r2.type)  +
                     "\" instead of \"" + (varInfo.getType() == TypeEnum.CUSTOM ? varInfo.getCustomTypeName() : varInfo.getType());
             if ( argu.type.equals("main") ){
                 this.errorMsg += "\" in main";
             } else {
                 this.errorMsg += "\" in method \"" + argu.name + "\" of the class \"" + argu.supername + "\"";
             }
+            this.errorMsg += " for the variable \"" + r0.name +"\"";
             return null;
         }
 
@@ -509,7 +509,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(Expression n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        return n.f0.accept(this, argu);
+        return n.f0.accept(this, new VisitorParameterInfo(argu.name, argu.supername, "getVariableType"));
     }
 
     /**
@@ -652,38 +652,61 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         VisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r0 == null || r2 == null) return null;
 
-        MethodInfo methodInfo = null;  // TODO: find return type of called method to return as the Expression's type
-        if (r0.type != null && (r0.type == TypeEnum.BOOLEAN || r0.type == TypeEnum.INTEGER || r0.type == TypeEnum.INTARRAY) ){
+        MethodInfo methodInfo;
+        if (r0.type != null && (r0.type == TypeEnum.BOOLEAN || r0.type == TypeEnum.INTEGER || r0.type == TypeEnum.INTARRAY)) {
             this.detectedSemanticError = true;
             this.errorMsg = "Calling a method on non-object" + (r0.name != null ? " \"" + r0.name + "\"" : "");
             return null;
-        } else if (r0.name != null && r0.name.equals("this")){
+        } else if (r0.name != null && r0.name.equals("this")) {
             // check that method exists for "this"
-            if (argu.type == "main"){
+            if (argu.type == "main") {
                 this.detectedSemanticError = true;
                 this.errorMsg = "Main class cannot call methods with \"this\" as it cannot have any such methods";
                 return null;
-            } else if (argu.type == "method"){
+            } else if (argu.type == "method") {
                 methodInfo = ST.lookupMethod(argu.name, r2.name);
-                if (methodInfo == null){
+                if (methodInfo == null) {
                     this.detectedSemanticError = true;
                     this.errorMsg = "Class \"" + argu.supername + "\" does not have a method \"" + r2.name + "\"";
                     return null;
                 }
-            } else { System.err.println("Warning: invalid arguments"); return null; }
+            } else {
+                System.err.println("Warning: invalid arguments");
+                return null;
+            }
+        } else if (r0.name != null && r0.isAlloced) {  // TODO SOS: what to do about Integer and Boolean methods?
+            // check if allocation type has that method
+            if (r0.type != TypeEnum.CUSTOM){
+                // TODO: Is this always an error?
+                this.detectedSemanticError = true;
+                this.errorMsg = "Method called on newly allocated primitive type \"" + r0.type + "\"";
+                return null;
+            } else {
+                methodInfo = ST.lookupMethod(r0.name, r2.name);
+                if (methodInfo == null){
+                    this.detectedSemanticError = true;
+                    this.errorMsg = "Custom type \"" + r0.name + "\" does not have a method \"" + r2.name + "\"";
+                    return null;
+                }
+            }
         } else if (r0.name != null){
             // check that variable exists in context
             VariableInfo varInfo;
             if (argu.type == "main"){
                 varInfo = ST.lookupMainVariable(r0.name);
+                if (varInfo == null) {
+                    this.detectedSemanticError = true;
+                    this.errorMsg = "Use of undeclared variable \"" + r0.name + "\" in main";
+                    return null;
+                }
             } else if (argu.type == "method") {
                 varInfo = ST.lookupVariable(argu.supername, argu.name, r0.name);
+                if (varInfo == null) {
+                    this.detectedSemanticError = true;
+                    this.errorMsg = "Use of undeclared variable \"" + r0.name + "\" in method \"" + argu.name + "\" of the class \"" + argu.supername + "\"";
+                    return null;
+                }
             } else { System.err.println("Warning: invalid arguments"); return null; }
-            if (varInfo == null) {
-                this.detectedSemanticError = true;
-                this.errorMsg = "Use of undeclared variable \"" + r0.name + "\" in method \"" + argu.name + "\" of the class \"" + argu.supername + "\"";
-                return null;
-            }
             // and that its class has that method
             if (varInfo.getType() != TypeEnum.CUSTOM){
                 this.detectedSemanticError = true;
@@ -800,6 +823,19 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
     public VisitorReturnInfo visit(Identifier n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
         if (argu != null && argu.type.equals("getType")) return new VisitorReturnInfo(n.f0.toString(), TypeEnum.CUSTOM);
+        else if (argu != null && argu.type.equals("getVariableType")){
+            VariableInfo varInfo = ST.lookupVariable(argu.supername, argu.name, n.f0.toString());
+            if (varInfo != null && varInfo.getType() == TypeEnum.CUSTOM){
+                return new VisitorReturnInfo(varInfo.getCustomTypeName(), TypeEnum.CUSTOM);
+            } else if (varInfo != null){
+                return new VisitorReturnInfo(varInfo.getType());
+            } else {
+                // TODO: check again
+                this.detectedSemanticError = true;
+                this.errorMsg = "Use of undeclared variable \"" + n.f0.toString() + "\" in expression";
+                return null;
+            }
+        }
         else return new VisitorReturnInfo(n.f0.toString());
     }
 
@@ -832,7 +868,9 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             return null;
         }
         n.f4.accept(this, argu);
-        return new VisitorReturnInfo(TypeEnum.INTARRAY);
+        VisitorReturnInfo res = new VisitorReturnInfo(TypeEnum.INTARRAY);
+        res.isAlloced = true;
+        return res;
     }
 
     /**
@@ -845,8 +883,17 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         if (detectedSemanticError) return null;
         n.f0.accept(this, argu);
         VisitorReturnInfo r1 = n.f1.accept(this, new VisitorParameterInfo(null, "getType"));
+
+        // check if custom type exists
+        if ( ST.lookupClass(r1.name) == null ){
+            this.detectedSemanticError = true;
+            this.errorMsg = "Tried to allocate an object of a non-existant custom type: \"" + r1.name + "\"";
+            return null;
+        }
+
         n.f2.accept(this, argu);
         n.f3.accept(this, argu);
+        r1.isAlloced = true;
         return r1;
     }
 

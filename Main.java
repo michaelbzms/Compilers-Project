@@ -11,12 +11,12 @@ class Main {
 			try {
 			    fis = new FileInputStream(args[0]);
 			    MiniJavaParser parser = new MiniJavaParser(fis);
-			    System.out.println("Program \"" + args[i] + "\" parsed successfully.");
+				Goal root = parser.Goal();
+				System.out.println("Program \"" + args[i] + "\" parsed successfully.");
 
-			    // Create Symbol Table
+				// Create Symbol Table
 				SymbolTable symbolTable = new SymbolTable();
-			    CreateSymbolTableVisitor STVisitor = new CreateSymbolTableVisitor(symbolTable);
-			    Goal root = parser.Goal();
+				CreateSymbolTableVisitor STVisitor = new CreateSymbolTableVisitor(symbolTable);
 			    root.accept(STVisitor, null);
 			    if (STVisitor.detectedSemanticError) {
 			    	System.out.println((STVisitor.errorMsg.equals("")) ? "Semantic error(1)" : "Semantic error(1): " + STVisitor.errorMsg);

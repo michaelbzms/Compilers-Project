@@ -2,6 +2,7 @@
 public class VisitorReturnInfo {
     public String name = null;
     public TypeEnum type = null;
+    public boolean isAlloced = false;
 
     public VisitorReturnInfo(String _name){
         name = _name;
