@@ -169,7 +169,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         if (r10 == null) return null;
 
         // check that expression is of the method's return type
-        MethodInfo methodInfo = ST.lookupMethod(argu.getName(), r2.getName());
+        MethodInfo methodInfo = SemanticChecks.checkMethodExistsForCustomType(ST, argu.getName(), r2.getName());
         if (methodInfo == null) { System.err.println("Warning: Missing method from SymbolTable?"); return null; }
         if (!SemanticChecks.checkType(ST, new MiniJavaType(r10.getType(), r10.getName()), methodInfo.getReturnType())){
             this.detectedSemanticError = true;
@@ -319,7 +319,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
                 return null;
             }
         } else {
-            varInfo = ST.lookupVariable(argu.getSupername(), argu.getName(), r0.getName());
+            varInfo = SemanticChecks.checkVariableOrFieldExists(ST,  argu.getSupername(), argu.getName(), r0.getName());
             if (varInfo == null) {
                 this.detectedSemanticError = true;
                 this.errorMsg = "Use of undeclared variable \"" + r0.getName() + "\" in method \"" + argu.getName() + "\" of the class \"" + argu.getSupername() + "\"";
@@ -378,10 +378,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
                 return null;
             }
         } else {
-            varInfo = ST.lookupVariable(argu.getSupername(), argu.getName(), r0.getName());
-            if (varInfo == null){  // if it is not a local variable maybe it is a field variable
-                varInfo = ST.lookupField(argu.getSupername(), r0.getName());
-            }
+            varInfo = SemanticChecks.checkVariableOrFieldExists(ST, argu.getSupername(), argu.getName(), r0.getName());
             if (varInfo == null) {
                 this.detectedSemanticError = true;
                 this.errorMsg = "Use of undeclared array-variable \"" + r0.getName() + "\" in method \"" + argu.getName() + "\" of the class \"" + argu.getSupername() + "\"";
@@ -659,7 +656,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
                 this.errorMsg = "Main class cannot call methods with \"this\" as it cannot have any such methods";
                 return null;
             } else if (argu.getType() == "method") {
-                methodInfo = ST.lookupMethod(argu.getName(), r2.getName());
+                methodInfo = SemanticChecks.checkMethodExistsForCustomType(ST, argu.getName(), r2.getName());
                 if (methodInfo == null) {
                     this.detectedSemanticError = true;
                     this.errorMsg = "Class \"" + argu.getSupername() + "\" does not have a method \"" + r2.getName() + "\"";
@@ -677,7 +674,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
                 this.errorMsg = "Method called on newly allocated primitive type \"" + r0.getType() + "\"";
                 return null;
             } else {
-                methodInfo = ST.lookupMethod(r0.getName(), r2.getName());
+                methodInfo = SemanticChecks.checkMethodExistsForCustomType(ST, r0.getName(), r2.getName());
                 if (methodInfo == null){
                     this.detectedSemanticError = true;
                     this.errorMsg = "Custom type \"" + r0.getName() + "\" does not have a method \"" + r2.getName() + "\"";
@@ -687,18 +684,15 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         } else if (r0.getName() != null){
             // check that variable exists in context
             VariableInfo varInfo;
-            if (argu.getType() == "main"){
+            if ("main".equals(argu.getType())){
                 varInfo = ST.lookupMainVariable(r0.getName());
                 if (varInfo == null) {
                     this.detectedSemanticError = true;
                     this.errorMsg = "Use of undeclared variable \"" + r0.getName() + "\" in main";
                     return null;
                 }
-            } else if (argu.getType() == "method") {
-                varInfo = ST.lookupVariable(argu.getSupername(), argu.getName(), r0.getName());
-                if (varInfo == null){  // if it is not a local variable maybe it is a field variable
-                    varInfo = ST.lookupField(argu.getSupername(), r0.getName());
-                }
+            } else if ("method".equals(argu.getType())) {
+                varInfo = SemanticChecks.checkVariableOrFieldExists(ST, argu.getSupername(), argu.getName(), r0.getName());
                 if (varInfo == null) {
                     this.detectedSemanticError = true;
                     this.errorMsg = "Use of undeclared variable \"" + r0.getName() + "\" in method \"" + argu.getName() + "\" of the class \"" + argu.getSupername() + "\"";
@@ -711,7 +705,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
                 this.errorMsg = "Calling a method on non-object " + (r0.getName() != null ? " \"" + r0.getName() + "\"" : "");
                 return null;
             }
-            methodInfo = ST.lookupMethod(varInfo.getType().getCustomTypeName(), r2.getName());
+            methodInfo = SemanticChecks.checkMethodExistsForCustomType(ST, varInfo.getType().getCustomTypeName(), r2.getName());
             if (methodInfo == null){
                 this.detectedSemanticError = true;
                 this.errorMsg = "Class \"" + varInfo.getType().getCustomTypeName() + "\" does not have a method \"" + r2.getName() + "\"";
@@ -822,10 +816,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         if (detectedSemanticError) return null;
         if (argu != null && argu.getPurpose() != null && argu.getPurpose().equals("getType")) return new VisitorReturnInfo(n.f0.toString(), TypeEnum.CUSTOM);
         else if (argu != null && argu.getPurpose() != null && argu.getPurpose().equals("getVariableType") && argu.getName() != null && argu.getSupername() != null){
-            VariableInfo varInfo = ST.lookupVariable(argu.getSupername(), argu.getName(), n.f0.toString());
-            if (varInfo == null){  // if it is not a local variable maybe it is a field variable
-                varInfo = ST.lookupField(argu.getSupername(), n.f0.toString());
-            }
+            VariableInfo varInfo = SemanticChecks.checkVariableOrFieldExists(ST, argu.getSupername(), argu.getName(), n.f0.toString());
             if (varInfo != null && varInfo.getType().getType() == TypeEnum.CUSTOM){
                 return new VisitorReturnInfo(varInfo.getType().getCustomTypeName(), TypeEnum.CUSTOM);
             } else if (varInfo != null){

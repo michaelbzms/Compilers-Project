@@ -2,7 +2,6 @@
 
 public class SemanticChecks {
 
-
     public static boolean checkType(SymbolTable ST, MiniJavaType givenType, MiniJavaType targetType){
         if (ST == null || givenType == null || targetType == null){
             System.err.println("Null parameters to checkType()");
@@ -26,6 +25,37 @@ public class SemanticChecks {
 
         // else
         return false;
+    }
+
+    public static MethodInfo checkMethodExistsForCustomType(SymbolTable ST, String customTypeName, String methodName){
+        if (ST == null || customTypeName == null || methodName == null){
+            System.err.println("Null parameters to checkMethodExistsForCustomType()");
+            return null;
+        }
+        // First check if it is a method of customTypeName
+        MethodInfo methodInfo = ST.lookupMethod(customTypeName, methodName);
+        // if that fails check if it is a method of a superclass (local methods override superclass methods)
+        // TODO
+        return methodInfo;
+    }
+
+    public static VariableInfo checkVariableOrFieldExists(SymbolTable ST, String customTypeName, String methodName, String varName){
+        if (ST == null || customTypeName == null || varName == null){
+            System.err.println("Null parameters to checkMethodExistsForCustomType()");
+            return null;
+        }
+        VariableInfo varInfo = null;
+        // First check if it is a local variable of the method (if method is given)
+        if (methodName != null){
+            varInfo = ST.lookupVariable(customTypeName, methodName, varName);
+        }
+        // If that fails then check if it is a field of customTypeName (local variables shadow fields)
+        if (varInfo == null){
+            varInfo = ST.lookupField(customTypeName, varName);
+        }
+        // if that fails then check if it is a field of a superclass (local fields shadow superclass fields)
+        // TODO
+        return varInfo;
     }
 
 }
