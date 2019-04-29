@@ -14,40 +14,29 @@ import java.util.*;
  */
 
 
-enum TypeEnum {
-	INTEGER, BOOLEAN, INTARRAY, CUSTOM, MAINSTRING
-}
-
 
 class VariableInfo {
-	private TypeEnum type;
-	private String customTypeName = null;
+	private MiniJavaType type;
 
-	public VariableInfo(TypeEnum _type) { type = _type; }
-	public VariableInfo(TypeEnum _type, String _customTypeName) {
-		type = _type;
-		customTypeName = _customTypeName;
-	}
-	public TypeEnum getType() { return type; }
-	public String getCustomTypeName() { return customTypeName; }
+	public VariableInfo(MiniJavaType _type) { type = _type; }
+
+	public MiniJavaType getType() { return type; }
 
 	////////////////////////
 	////     DEBUG     /////
 	////////////////////////
 	public void printDebugInfo(boolean onemoreindent) {
-		System.out.println("      " + ((onemoreindent) ? "      " : "") + "> variable_type = " + type + ((type == TypeEnum.CUSTOM) ? " -> " + customTypeName : ""));
+		System.out.println("      " + ((onemoreindent) ? "      " : "") + "> variable_type = " + type.getDebugInfo());
 	}
 }
 
 class MethodInfo {
-	private TypeEnum returnType;
-	private String customReturnTypeName = null;
+	private MiniJavaType returnType;
 	private Map<String, VariableInfo> variables = new HashMap<String, VariableInfo>();  // variable name -> Variable Info
 
-	public MethodInfo(TypeEnum _returnType){ returnType = _returnType; }
+	public MethodInfo(MiniJavaType _returnType){ returnType = _returnType; }
 
-	public TypeEnum getReturnType() { return returnType; }
-	public String getCustomReturnTypeName() { return customReturnTypeName; }
+	public MiniJavaType getReturnType() { return returnType; }
 
 	public VariableInfo getVariableInfo(String variableName){
 		return variables.get(variableName);
@@ -63,7 +52,7 @@ class MethodInfo {
 	////     DEBUG     /////
 	////////////////////////
 	public void printDebugInfo() {
-		System.out.println("      > return_type = " + returnType);
+		System.out.println("      > return_type = " + returnType.getDebugInfo());
 		for (Map.Entry<String, VariableInfo> entry : variables.entrySet()) {
 			System.out.println("         > variable_name = " + entry.getKey());
 			VariableInfo variableInfo = entry.getValue();
@@ -125,11 +114,11 @@ class ClassInfo {
 		}
 		System.out.println("  Fields in order are: ");
 		for (MyPair<String, VariableInfo> node : orderedFields){
-			System.out.print(node.getFirst() + ": " + node.getSecond().getType() + ", ");
+			System.out.print(node.getFirst() + ": " + node.getSecond().getType().getDebugInfo() + ", ");
 		}
 		System.out.println("$\n  Methods in order are: ");
 		for (MyPair<String, MethodInfo> node : orderedMethods){
-			System.out.print(node.getFirst() + ": " + node.getSecond().getReturnType() + ", ");
+			System.out.print(node.getFirst() + ": " + node.getSecond().getReturnType().getDebugInfo() + ", ");
 		}
 		System.out.println("$\n");
 		for (Map.Entry<String, VariableInfo> entry : fields.entrySet()) {
@@ -146,6 +135,7 @@ class ClassInfo {
 }
 
 
+@SuppressWarnings("WeakerAccess")
 public class SymbolTable {
 	private Map<String, ClassInfo> classes = new HashMap<String, ClassInfo>();   // class name -> Class Info
 	// Main class:
@@ -207,7 +197,7 @@ public class SymbolTable {
 	}
 
 	public VariableInfo lookupMainVariable(String variableName){
-		if (variableName == mainClassArgName) return new VariableInfo(TypeEnum.MAINSTRING);
+		if (variableName != null && variableName.equals(mainClassArgName)) return new VariableInfo(new MiniJavaType(TypeEnum.MAINSTRING));
 		else return mainMethodVariables.get(variableName);
 	}
 

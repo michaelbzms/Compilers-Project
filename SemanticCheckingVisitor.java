@@ -13,19 +13,6 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         this.ST = _ST;
     }
 
-    private boolean checkType(VisitorReturnInfo expression, TypeEnum targetType){
-        return checkType(expression, targetType, null);
-    }
-
-    private boolean checkType(VisitorReturnInfo expression, TypeEnum targetType, String customTypeName){
-        // check if types match
-        if (expression.getType() == targetType && (targetType != TypeEnum.CUSTOM || (expression.getName() != null && expression.getName().equals(customTypeName)))) return true;
-        // if not check for subtyping
-        // TODO
-        // else
-        return false;
-    }
-
     /**
      * f0 -> "class"
      * f1 -> Identifier()
@@ -184,9 +171,9 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         // check that expression is of the method's return type
         MethodInfo methodInfo = ST.lookupMethod(argu.getName(), r2.getName());
         if (methodInfo == null) { System.err.println("Warning: Missing method from SymbolTable?"); return null; }
-        if ( !checkType(r10, methodInfo.getReturnType()) ){
+        if (!SemanticChecks.checkType(ST, new MiniJavaType(r10.getType(), r10.getName()), methodInfo.getReturnType())){
             this.detectedSemanticError = true;
-            this.errorMsg = "Invalid return type of the method \"" + r2.getName() + "\": " + (r10.getType() != TypeEnum.CUSTOM ? r10.getType() : r10.getName()) + " instead of " + (methodInfo.getReturnType() != TypeEnum.CUSTOM ? methodInfo.getReturnType() : methodInfo.getCustomReturnTypeName());
+            this.errorMsg = "Invalid return type of the method \"" + r2.getName() + "\": " + (r10.getType() != TypeEnum.CUSTOM ? r10.getType() : r10.getName()) + " instead of " + methodInfo.getReturnType().getDebugInfo();
             return null;
         }
 
@@ -344,11 +331,13 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         VisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r2 == null) return null;
 
+
+
         // check if expression is of the correct type
-        if ( !checkType(r2, varInfo.getType(), (varInfo.getType() != TypeEnum.CUSTOM) ? varInfo.getCustomTypeName() : null) ){
+        if ( !SemanticChecks.checkType(ST, new MiniJavaType(r2.getType(), r2.getName()), varInfo.getType()) ){
             this.detectedSemanticError = true;
             this.errorMsg = "Incompatible assignment type: \"" + (r2.getType() == TypeEnum.CUSTOM ? r2.getName() : r2.getType())  +
-                    "\" instead of \"" + (varInfo.getType() == TypeEnum.CUSTOM ? varInfo.getCustomTypeName() : varInfo.getType());
+                    "\" instead of \"" + varInfo.getType().getDebugInfo();
             if ( argu.getType().equals("main") ){
                 this.errorMsg += "\" in main";
             } else {
@@ -390,6 +379,9 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             }
         } else {
             varInfo = ST.lookupVariable(argu.getSupername(), argu.getName(), r0.getName());
+            if (varInfo == null){  // if it is not a local variable maybe it is a field variable
+                varInfo = ST.lookupField(argu.getSupername(), r0.getName());
+            }
             if (varInfo == null) {
                 this.detectedSemanticError = true;
                 this.errorMsg = "Use of undeclared array-variable \"" + r0.getName() + "\" in method \"" + argu.getName() + "\" of the class \"" + argu.getSupername() + "\"";
@@ -398,7 +390,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         }
 
         // check if variable is an array-variable
-        if (varInfo.getType() != TypeEnum.INTARRAY){
+        if (varInfo.getType().getType() != TypeEnum.INTARRAY){
             this.detectedSemanticError = true;
             this.errorMsg = "Use of non-array variable \"" + r0.getName() + "\" as an array variable";
             return null;
@@ -413,11 +405,11 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         if (r2 == null || r5 == null) return null;
 
         // check if index type and value type are integers
-        if ( !checkType(r2, TypeEnum.INTEGER) ) {
+        if ( !SemanticChecks.checkType(ST, new MiniJavaType(r2.getType(), r2.getName()), MiniJavaType.INTEGER) ) {
             this.detectedSemanticError = true;
             this.errorMsg = "Invalid (not an integer) index type \"" + r2.getType() + "\" in array assignment of \"" + r0.getName() + "\"";
             return null;
-        } else if ( !checkType(r5, TypeEnum.INTEGER) ) {
+        } else if ( !SemanticChecks.checkType(ST, new MiniJavaType(r5.getType(), r5.getName()), MiniJavaType.INTEGER) ) {
             this.detectedSemanticError = true;
             this.errorMsg = "Invalid (not an integer) value type \"" + r2.getType() + "\" in array assignment of \"" + r0.getName() + "\"";
             return null;
@@ -441,7 +433,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         n.f1.accept(this, argu);
         VisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r2 == null) return null;
-        if (!checkType(r2, TypeEnum.BOOLEAN)){
+        if (!SemanticChecks.checkType(ST, new MiniJavaType(r2.getType(), r2.getName()), MiniJavaType.BOOLEAN)){
             this.detectedSemanticError = true;
             this.errorMsg = "Invalid (not boolean) condition type in if statement";
             return null;
@@ -467,7 +459,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         n.f1.accept(this, argu);
         VisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r2 == null) return null;
-        if (!checkType(r2, TypeEnum.BOOLEAN)){
+        if (!SemanticChecks.checkType(ST, new MiniJavaType(r2.getType(), r2.getName()), MiniJavaType.BOOLEAN)){
             this.detectedSemanticError = true;
             this.errorMsg = "Invalid (not boolean) condition type in while statement";
             return null;
@@ -521,7 +513,8 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         n.f1.accept(this, argu);
         VisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r0 == null || r2 == null) return null;
-        if ( !checkType(r0, TypeEnum.BOOLEAN) || !checkType(r2, TypeEnum.BOOLEAN) ){
+        if ( !SemanticChecks.checkType(ST, new MiniJavaType(r0.getType(), r0.getName()), MiniJavaType.BOOLEAN) ||
+             !SemanticChecks.checkType(ST, new MiniJavaType(r2.getType(), r2.getName()), MiniJavaType.BOOLEAN) ){
             this.detectedSemanticError = true;
             this.errorMsg = "Bad operands for operator \"&&\" (must be booleans)";
             return null;
@@ -540,7 +533,8 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         n.f1.accept(this, argu);
         VisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r0 == null || r2 == null) return null;
-        if ( !checkType(r0, TypeEnum.INTEGER) || !checkType(r2, TypeEnum.INTEGER) ){
+        if ( !SemanticChecks.checkType(ST, new MiniJavaType(r0.getType(), r0.getName()), MiniJavaType.INTEGER) ||
+             !SemanticChecks.checkType(ST, new MiniJavaType(r2.getType(), r2.getName()), MiniJavaType.INTEGER) ){
             this.detectedSemanticError = true;
             this.errorMsg = "Bad operands for operator \"<\" (must be integers)";
             return null;
@@ -559,7 +553,8 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         n.f1.accept(this, argu);
         VisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r0 == null || r2 == null) return null;
-        if ( !checkType(r0, TypeEnum.INTEGER) || !checkType(r2, TypeEnum.INTEGER) ){
+        if ( !SemanticChecks.checkType(ST, new MiniJavaType(r0.getType(), r0.getName()), MiniJavaType.INTEGER) ||
+             !SemanticChecks.checkType(ST, new MiniJavaType(r2.getType(), r2.getName()), MiniJavaType.INTEGER) ){
             this.detectedSemanticError = true;
             this.errorMsg = "Bad operands for operator \"+\" (must be integers)";
             return null;
@@ -578,7 +573,8 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         n.f1.accept(this, argu);
         VisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r0 == null || r2 == null) return null;
-        if ( !checkType(r0, TypeEnum.INTEGER) || !checkType(r2, TypeEnum.INTEGER) ){
+        if ( !SemanticChecks.checkType(ST, new MiniJavaType(r0.getType(), r0.getName()), MiniJavaType.INTEGER) ||
+            ! SemanticChecks.checkType(ST, new MiniJavaType(r2.getType(), r2.getName()), MiniJavaType.INTEGER) ){
             this.detectedSemanticError = true;
             this.errorMsg = "Bad operands for operator \"-\" (must be integers)";
             return null;
@@ -597,7 +593,8 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         n.f1.accept(this, argu);
         VisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r0 == null || r2 == null) return null;
-        if ( !checkType(r0, TypeEnum.INTEGER) || !checkType(r2, TypeEnum.INTEGER) ){
+        if ( !SemanticChecks.checkType(ST, new MiniJavaType(r0.getType(), r0.getName()), MiniJavaType.INTEGER) ||
+             !SemanticChecks.checkType(ST, new MiniJavaType(r2.getType(), r2.getName()), MiniJavaType.INTEGER) ){
             this.detectedSemanticError = true;
             this.errorMsg = "Bad operands for operator \"*\" (must be integers)";
             return null;
@@ -699,6 +696,9 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
                 }
             } else if (argu.getType() == "method") {
                 varInfo = ST.lookupVariable(argu.getSupername(), argu.getName(), r0.getName());
+                if (varInfo == null){  // if it is not a local variable maybe it is a field variable
+                    varInfo = ST.lookupField(argu.getSupername(), r0.getName());
+                }
                 if (varInfo == null) {
                     this.detectedSemanticError = true;
                     this.errorMsg = "Use of undeclared variable \"" + r0.getName() + "\" in method \"" + argu.getName() + "\" of the class \"" + argu.getSupername() + "\"";
@@ -706,15 +706,15 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
                 }
             } else { System.err.println("Warning: invalid arguments: argu.getType() = " + argu.getType()); return null; }
             // and that its class has that method
-            if (varInfo.getType() != TypeEnum.CUSTOM){
+            if (varInfo.getType().getType() != TypeEnum.CUSTOM){
                 this.detectedSemanticError = true;
                 this.errorMsg = "Calling a method on non-object " + (r0.getName() != null ? " \"" + r0.getName() + "\"" : "");
                 return null;
             }
-            methodInfo = ST.lookupMethod(varInfo.getCustomTypeName(), r2.getName());
+            methodInfo = ST.lookupMethod(varInfo.getType().getCustomTypeName(), r2.getName());
             if (methodInfo == null){
                 this.detectedSemanticError = true;
-                this.errorMsg = "Class \"" + varInfo.getCustomTypeName() + "\" does not have a method \"" + r2.getName() + "\"";
+                this.errorMsg = "Class \"" + varInfo.getType().getCustomTypeName() + "\" does not have a method \"" + r2.getName() + "\"";
                 return null;
             }
         } else {
@@ -725,7 +725,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
-        return new VisitorReturnInfo(methodInfo.getCustomReturnTypeName(), methodInfo.getReturnType());
+        return new VisitorReturnInfo(methodInfo.getReturnType().getCustomTypeName(), methodInfo.getReturnType().getType());
     }
 
 
@@ -823,10 +823,13 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         if (argu != null && argu.getPurpose() != null && argu.getPurpose().equals("getType")) return new VisitorReturnInfo(n.f0.toString(), TypeEnum.CUSTOM);
         else if (argu != null && argu.getPurpose() != null && argu.getPurpose().equals("getVariableType") && argu.getName() != null && argu.getSupername() != null){
             VariableInfo varInfo = ST.lookupVariable(argu.getSupername(), argu.getName(), n.f0.toString());
-            if (varInfo != null && varInfo.getType() == TypeEnum.CUSTOM){
-                return new VisitorReturnInfo(varInfo.getCustomTypeName(), TypeEnum.CUSTOM);
+            if (varInfo == null){  // if it is not a local variable maybe it is a field variable
+                varInfo = ST.lookupField(argu.getSupername(), n.f0.toString());
+            }
+            if (varInfo != null && varInfo.getType().getType() == TypeEnum.CUSTOM){
+                return new VisitorReturnInfo(varInfo.getType().getCustomTypeName(), TypeEnum.CUSTOM);
             } else if (varInfo != null){
-                return new VisitorReturnInfo(varInfo.getType());
+                return new VisitorReturnInfo(varInfo.getType().getType());
             } else {
                 // TODO: check again
                 this.detectedSemanticError = true;
@@ -860,7 +863,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         n.f2.accept(this, argu);
         VisitorReturnInfo r3 = n.f3.accept(this, argu);
         if (r3 == null) return null;
-        if ( !checkType(r3, TypeEnum.INTEGER) ){
+        if ( !SemanticChecks.checkType(ST, new MiniJavaType(r3.getType(), r3.getName()), MiniJavaType.INTEGER) ) {
             this.detectedSemanticError = true;
             this.errorMsg = "Invalid array size (not an integer) in an array allocation";
             return null;
