@@ -41,9 +41,9 @@ class Dog extends Animal {
     }
 
     public Animal getAnimalObj(){
-        Dog dog;
-        dog = new Car();
-        return dog;
+        Animal dogInside;
+        dogInside = new Dog();
+        return dogInside;
     }
 
 }

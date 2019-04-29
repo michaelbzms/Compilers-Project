@@ -35,7 +35,17 @@ public class SemanticChecks {
         // First check if it is a method of customTypeName
         MethodInfo methodInfo = ST.lookupMethod(customTypeName, methodName);
         // if that fails check if it is a method of a superclass (local methods override superclass methods)
-        // TODO
+        if (methodInfo == null){
+            ClassInfo classInfo = ST.lookupClass(customTypeName);
+            if (classInfo != null) {
+                String motherClassName = classInfo.getMotherClassName();
+                while (motherClassName != null && methodInfo == null) {
+                    classInfo = ST.lookupClass(classInfo.getMotherClassName());
+                    methodInfo = ST.lookupMethod(motherClassName, methodName);
+                    motherClassName = classInfo.getMotherClassName();
+                }
+            }
+        }
         return methodInfo;
     }
 
@@ -54,7 +64,17 @@ public class SemanticChecks {
             varInfo = ST.lookupField(customTypeName, varName);
         }
         // if that fails then check if it is a field of a superclass (local fields shadow superclass fields)
-        // TODO
+        if (varInfo == null){
+            ClassInfo classInfo = ST.lookupClass(customTypeName);
+            if (classInfo != null) {
+                String motherClassName = classInfo.getMotherClassName();
+                while (motherClassName != null && varInfo == null) {
+                    classInfo = ST.lookupClass(classInfo.getMotherClassName());
+                    varInfo = ST.lookupField(motherClassName, varName);
+                    motherClassName = classInfo.getMotherClassName();
+                }
+            }
+        }
         return varInfo;
     }
 
