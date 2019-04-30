@@ -1,7 +1,17 @@
 class mytest {
     public static void main(String[] a){
-
+        int anInteger;
+        boolean aBoolean;
     }
+}
+
+
+class MySecondTest extends mytest {
+
+    public boolean foo(){
+        return true;
+    }
+
 }
 
 class Car {

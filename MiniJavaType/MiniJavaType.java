@@ -35,12 +35,15 @@ public class MiniJavaType {
 
     // DEBUG
     public String getDebugInfo(){
-        return (type == TypeEnum.CUSTOM ? customTypeName : type.toString());
+        if (type == null && customTypeName == null) return "VOID";
+        else if (type == null) return "UNKNOWN";
+        else return (type == TypeEnum.CUSTOM ? customTypeName : type.toString());
     }
 
     // CONSTANTS
     public static final MiniJavaType INTEGER = new MiniJavaType(TypeEnum.INTEGER);
     public static final MiniJavaType BOOLEAN = new MiniJavaType(TypeEnum.BOOLEAN);
     public static final MiniJavaType INTARRAY = new MiniJavaType(TypeEnum.INTARRAY);
+    public static final MiniJavaType VOID = new MiniJavaType(null, null);
 
 }

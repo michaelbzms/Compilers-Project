@@ -29,7 +29,7 @@ public class MethodInfo {
     public void printDebugInfo() {
         System.out.println("      > return_type = " + returnType.getDebugInfo());
         for (Map.Entry<String, VariableInfo> entry : variables.entrySet()) {
-            System.out.println("         > variable_name = " + entry.getKey());
+            System.out.println("      > variable_name = " + entry.getKey());
             VariableInfo variableInfo = entry.getValue();
             variableInfo.printDebugInfo(true);
         }

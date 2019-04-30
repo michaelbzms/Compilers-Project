@@ -1,5 +1,7 @@
 package SymbolTable;
 
+import MiniJavaType.MiniJavaType;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,27 +22,30 @@ import java.util.Map;
 
 @SuppressWarnings("WeakerAccess")
 public class SymbolTable {
-	private Map<String, ClassInfo> classes = new HashMap<String, ClassInfo>();   // class name -> Class Info
 	// Main class:
 	private String mainClassName = null;
-	private ClassInfo mainClassInfo = null;
-	private Map<String, VariableInfo> mainMethodVariables = new HashMap<String, VariableInfo>();
+	private final ClassInfo mainClassInfo;
+	private MethodInfo mainMethodInfo;
+	// Other (Custom) classes:
+	private Map<String, ClassInfo> classes = new HashMap<String, ClassInfo>();   // class name -> Class Info
+
+	public SymbolTable(){
+		mainClassInfo = new ClassInfo();
+		mainMethodInfo = new MethodInfo(MiniJavaType.VOID);
+		mainClassInfo.putMethodInfo("main", mainMethodInfo);
+	}
 
 	public String getMainClassName() { return mainClassName; }
 
 	public boolean setMainClassName(String _mainClassName) {
 		if (mainClassName == null){
 			mainClassName = _mainClassName;
-			//mainClassInfo = new ClassInfo();
-			//mainClassInfo.putMethodInfo("main", new SymbolTable.MethodInfo());
-            // TODO
 			return true;
 		} else return false;
 	}
 
 	public boolean putMainVariable(String variableName, VariableInfo variableInfo){
-		if ( mainMethodVariables.containsKey(variableName) ) return false;
-		mainMethodVariables.put(variableName, variableInfo);
+		mainMethodInfo.putVariableInfo(variableName, variableInfo);
 		return true;
 	}
 
@@ -75,33 +80,37 @@ public class SymbolTable {
 	}
 
 	public VariableInfo lookupMainVariable(String variableName){
-		return mainMethodVariables.get(variableName);
+		return mainMethodInfo.getVariableInfo(variableName);
 	}
 
 	public VariableInfo lookupVariable(String className, String methodName, String variableName){
-		ClassInfo classInfo = lookupClass(className);
-		if (classInfo != null){
-			MethodInfo methodInfo = classInfo.getMethodInfo(methodName);
-			return (methodInfo != null) ? methodInfo.getVariableInfo(variableName) : null;
-		} else return null;
+		if (this.getMainClassName() != null && this.getMainClassName().equals(className) && "main".equals(methodName)){
+			return this.lookupMainVariable(variableName);
+		} else {
+			ClassInfo classInfo = lookupClass(className);
+			if (classInfo != null) {
+				MethodInfo methodInfo = classInfo.getMethodInfo(methodName);
+				return (methodInfo != null) ? methodInfo.getVariableInfo(variableName) : null;
+			} else return null;
+		}
 	}
 
 	public VariableInfo lookupField(String className, String fieldName){
+		if (this.getMainClassName() != null && this.getMainClassName().equals(className))
+			return null;   // main class can have no fields
 		ClassInfo classInfo = lookupClass(className);
 		return (classInfo != null) ? classes.get(className).getFieldInfo(fieldName) : null;
 	}
 
 	public MethodInfo lookupMethod(String className, String methodName){
+		if (this.getMainClassName() != null && this.getMainClassName().equals(className))
+			return ("main".equals(methodName) ?  mainMethodInfo : null);
 		ClassInfo classInfo = lookupClass(className);
 		return (classInfo != null) ? classInfo.getMethodInfo(methodName) : null;
 	}
 
 	public ClassInfo lookupClass(String className){
-//		if (className != null && className.equals(this.getMainClassName())){
-//			ClassInfo mainInfo = new ClassInfo();
-//			//mainInfo. //TODO
-//		}
-		return classes.get(className);
+		return (this.getMainClassName() != null && this.getMainClassName().equals(className)) ? mainClassInfo : classes.get(className);
 	}
 
 
@@ -119,13 +128,9 @@ public class SymbolTable {
 	////     DEBUG     /////
 	////////////////////////
 	public void printDebugInfo(){
-		System.out.println("Main class: name = " + getMainClassName() + "\nMain method variables are: ");
-		for (Map.Entry<String, VariableInfo> entry : mainMethodVariables.entrySet()) {
-			System.out.println("   > variable_bame = " + entry.getKey());
-			VariableInfo variableInfo = entry.getValue();
-			variableInfo.printDebugInfo(false);
-		}
-		System.out.println("Statistics for classes are: ");
+		System.out.println("Main class is: " + getMainClassName() + "\nMain method return type and variables are: ");
+		mainMethodInfo.printDebugInfo();
+		System.out.println("\nOther classes are: ");
 		for (Map.Entry<String, ClassInfo> entry : classes.entrySet()) {
 			System.out.println("> class_name = " + entry.getKey());
 			ClassInfo classInfo = entry.getValue();

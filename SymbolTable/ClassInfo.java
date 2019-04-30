@@ -57,15 +57,15 @@ public class ClassInfo {
         if (getMotherClassName() != null) {
             System.out.println("  mother_class = " + getMotherClassName());
         }
-        System.out.println("  Fields in order are: ");
-        for (MyPair<String, VariableInfo> node : orderedFields){
-            System.out.print(node.getFirst() + ": " + node.getSecond().getType().getDebugInfo() + ", ");
-        }
-        System.out.println("$\n  Methods in order are: ");
-        for (MyPair<String, MethodInfo> node : orderedMethods){
-            System.out.print(node.getFirst() + ": " + node.getSecond().getReturnType().getDebugInfo() + ", ");
-        }
-        System.out.println("$\n");
+//        System.out.println("  Fields in order are: ");
+//        for (MyPair<String, VariableInfo> node : orderedFields){
+//            System.out.print(node.getFirst() + ": " + node.getSecond().getType().getDebugInfo() + ", ");
+//        }
+//        System.out.println("$\n  Methods in order are: ");
+//        for (MyPair<String, MethodInfo> node : orderedMethods){
+//            System.out.print(node.getFirst() + ": " + node.getSecond().getReturnType().getDebugInfo() + ", ");
+//        }
+//        System.out.println("$\n");
         for (Map.Entry<String, VariableInfo> entry : fields.entrySet()) {
             System.out.println("   > field_name = " + entry.getKey());
             VariableInfo fieldInfo = entry.getValue();
