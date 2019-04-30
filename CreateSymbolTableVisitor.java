@@ -133,7 +133,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         boolean feedback;
         switch(argu.getType()){
             case "mainclass":
-                feedback = ST.putMainVariable(r1.getName(),  new VariableInfo((r0.getType() == TypeEnum.CUSTOM) ? new MiniJavaType(r0.getName()) : new MiniJavaType(r0.getType())));
+                feedback = ST.putMainVariable(r1.getName(),  new VariableInfo(r0.getType()));
                 if (!feedback){
                     this.detectedSemanticError = true;
                     this.errorMsg = "duplicate variable name declaration \"" + r1.getName() + "\" in the main() method";
@@ -141,7 +141,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
                 }
                 break;
             case "class":
-                feedback = ST.putField(argu.getName(), r1.getName(), new VariableInfo((r0.getType() == TypeEnum.CUSTOM) ? new MiniJavaType(r0.getName()) : new MiniJavaType(r0.getType())));
+                feedback = ST.putField(argu.getName(), r1.getName(), new VariableInfo(r0.getType()));
                 if (!feedback){
                     this.detectedSemanticError = true;
                     this.errorMsg = "duplicate field name declaration \"" + r1.getName() + "\" in the class \"" + argu.getName() + "\"";
@@ -149,7 +149,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
                 }
                 break;
             case "method":
-                feedback = ST.putVariable(argu.getSupername(), argu.getName(), r1.getName(), new VariableInfo((r0.getType() == TypeEnum.CUSTOM) ? new MiniJavaType(r0.getName()) : new MiniJavaType(r0.getType())));
+                feedback = ST.putVariable(argu.getSupername(), argu.getName(), r1.getName(), new VariableInfo(r0.getType()));
                 if (!feedback){
                     this.detectedSemanticError = true;
                     this.errorMsg = "duplicate variable name declaration \"" + r1.getName() + "\" in the method \"" + argu.getName() + "\" of the class \"" + argu.getSupername() + "\"";
@@ -185,7 +185,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         VisitorReturnInfo r1 = n.f1.accept(this, null);
         VisitorReturnInfo r2 = n.f2.accept(this, null);
         if (r1 == null || r2 == null) return null;
-        if (!ST.putMethod(argu.getName(), r2.getName(), new MethodInfo((r1.getType() == TypeEnum.CUSTOM) ? new MiniJavaType(r1.getName()) : new MiniJavaType(r1.getType())))){
+        if (!ST.putMethod(argu.getName(), r2.getName(), new MethodInfo(r1.getType()))){
             this.detectedSemanticError = true;
             this.errorMsg = "duplicate method name declaration \"" + r2.getName() + "\" in the class \"" + argu.getName() + "\"";
             return null;
@@ -223,7 +223,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         VisitorReturnInfo r0 = n.f0.accept(this, null);
         VisitorReturnInfo r1 = n.f1.accept(this, null);
         if (r0 == null || r1 == null) return null;
-        boolean feedback = ST.putArgument(argu.getSupername(), argu.getName(), r1.getName(), new VariableInfo((r0.getType() == TypeEnum.CUSTOM) ? new MiniJavaType(r0.getName()) : new MiniJavaType(r0.getType())));
+        boolean feedback = ST.putArgument(argu.getSupername(), argu.getName(), r1.getName(), new VariableInfo(r0.getType()));
         if (!feedback){
             this.detectedSemanticError = true;
             this.errorMsg = "duplicate parameter name \"" + r1.getName() + "\" in method \"" + argu.getName() + "\" of class \"" + argu.getSupername() + "\"";
@@ -260,7 +260,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
     */
     public VisitorReturnInfo visit(Type n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        return n.f0.accept(this, new VisitorParameterInfo(null, null, null, "getType"));  // getType is used in Identifier()'s visit() for custom types
+        return n.f0.accept(this, new VisitorParameterInfo(null, null, null, "getTypeEnum"));  // getTypeEnum is used in Identifier()'s visit() for custom types
     }
 
     /**
@@ -273,7 +273,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         n.f0.accept(this, null);
         n.f1.accept(this, null);
         n.f2.accept(this, null);
-        return new VisitorReturnInfo(TypeEnum.INTARRAY);
+        return new VisitorReturnInfo(MiniJavaType.INTARRAY);
     }
 
     /**
@@ -281,7 +281,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
     */
     public VisitorReturnInfo visit(BooleanType n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        return new VisitorReturnInfo(TypeEnum.BOOLEAN);
+        return new VisitorReturnInfo(MiniJavaType.BOOLEAN);
     }
 
     /**
@@ -289,7 +289,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
     */
     public VisitorReturnInfo visit(IntegerType n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        return new VisitorReturnInfo(TypeEnum.INTEGER);
+        return new VisitorReturnInfo(MiniJavaType.INTEGER);
     }
 
     /**
@@ -297,7 +297,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
     */
     public VisitorReturnInfo visit(Identifier n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        if (argu != null && argu.getPurpose().equals("getType")) return new VisitorReturnInfo(n.f0.toString(), TypeEnum.CUSTOM);
+        if (argu != null && argu.getPurpose().equals("getTypeEnum")) return new VisitorReturnInfo(n.f0.toString(), new MiniJavaType(TypeEnum.CUSTOM, n.f0.toString()));
         else return new VisitorReturnInfo(n.f0.toString());
     }
 

@@ -21,9 +21,9 @@ class Car {
 class Animal {
     int id;
 
-    public boolean setId(int _id) {
+    public int setId(int _id) {
         id = _id;
-        return true;
+        return id;
     }
 
     public int getId(){

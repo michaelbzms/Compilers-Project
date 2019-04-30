@@ -59,7 +59,7 @@ public class ClassInfo {
         }
 //        System.out.println("  Fields in order are: ");
 //        for (MyPair<String, VariableInfo> node : orderedFields){
-//            System.out.print(node.getFirst() + ": " + node.getSecond().getType().getDebugInfo() + ", ");
+//            System.out.print(node.getFirst() + ": " + node.getSecond().getTypeEnum().getDebugInfo() + ", ");
 //        }
 //        System.out.println("$\n  Methods in order are: ");
 //        for (MyPair<String, MethodInfo> node : orderedMethods){

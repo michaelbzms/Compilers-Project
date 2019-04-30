@@ -16,7 +16,7 @@ public class SemanticChecks {
         if (givenType.equals(targetType)) return true;
 
         // if not, check for subtyping
-        if (givenType.getType() == TypeEnum.CUSTOM && targetType.getType() == TypeEnum.CUSTOM){
+        if (givenType.getTypeEnum() == TypeEnum.CUSTOM && targetType.getTypeEnum() == TypeEnum.CUSTOM){
             String className = givenType.getCustomTypeName();
             ClassInfo classInfo = ST.lookupClass(className);
             while (classInfo != null && !className.equals(targetType.getCustomTypeName())){

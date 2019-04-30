@@ -25,7 +25,7 @@ public class MiniJavaType {
         }
     }
 
-    public TypeEnum getType() { return type; }
+    public TypeEnum getTypeEnum() { return type; }
     public String getCustomTypeName() { return customTypeName; }
     public boolean isCustom() { return type == TypeEnum.CUSTOM && customTypeName != null; }
 
