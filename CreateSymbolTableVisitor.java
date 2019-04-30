@@ -48,9 +48,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         n.f8.accept(this, null);
         n.f9.accept(this, null);
         n.f10.accept(this, null);
-        VisitorReturnInfo r11 = n.f11.accept(this, null);   // r11 -> name of main()'s String[] args variable
-        if (r11 == null) return null;
-        ST.setMainClassArgName(r11.getName());
+        n.f11.accept(this, null);
         n.f12.accept(this, null);
         n.f13.accept(this, null);
         n.f14.accept(this, new VisitorParameterInfo(null, "mainclass"));

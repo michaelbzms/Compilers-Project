@@ -1,6 +1,6 @@
 
 enum TypeEnum {
-    INTEGER, BOOLEAN, INTARRAY, CUSTOM, MAINSTRING
+    INTEGER, BOOLEAN, INTARRAY, CUSTOM
 }
 
 public class MiniJavaType {

@@ -140,22 +140,13 @@ public class SymbolTable {
 	private Map<String, ClassInfo> classes = new HashMap<String, ClassInfo>();   // class name -> Class Info
 	// Main class:
 	private String mainClassName = null;
-	private String mainClassArgName = null;
 	private Map<String, VariableInfo> mainMethodVariables = new HashMap<String, VariableInfo>();
 
 	public String getMainClassName() { return mainClassName; }
-	public String getMainClassArgName() { return mainClassArgName; }
 
 	public boolean setMainClassName(String _mainClassName) {
 		if (mainClassName == null){
 			mainClassName = _mainClassName;
-			return true;
-		} else return false;
-	}
-
-	public boolean setMainClassArgName(String _mainClassArgName) {
-		if (mainClassArgName == null){
-			mainClassArgName = _mainClassArgName;
 			return true;
 		} else return false;
 	}
@@ -197,8 +188,7 @@ public class SymbolTable {
 	}
 
 	public VariableInfo lookupMainVariable(String variableName){
-		if (variableName != null && variableName.equals(mainClassArgName)) return new VariableInfo(new MiniJavaType(TypeEnum.MAINSTRING));
-		else return mainMethodVariables.get(variableName);
+		return mainMethodVariables.get(variableName);
 	}
 
 	public VariableInfo lookupVariable(String className, String methodName, String variableName){
@@ -238,7 +228,7 @@ public class SymbolTable {
 	////     DEBUG     /////
 	////////////////////////
 	public void printDebugInfo(){
-		System.out.println("Main class: name = " + getMainClassName() + ", args_name = " + getMainClassArgName() + "\nMain method variables are: ");
+		System.out.println("Main class: name = " + getMainClassName() + "\nMain method variables are: ");
 		for (Map.Entry<String, VariableInfo> entry : mainMethodVariables.entrySet()) {
 			System.out.println("   > variable_bame = " + entry.getKey());
 			VariableInfo variableInfo = entry.getValue();
