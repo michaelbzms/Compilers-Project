@@ -642,8 +642,8 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
     public VisitorReturnInfo visit(MessageSend n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
         VisitorReturnInfo r0 = n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        VisitorReturnInfo r2 = n.f2.accept(this, argu);
+        n.f1.accept(this, null);
+        VisitorReturnInfo r2 = n.f2.accept(this, null);
         if (r0 == null || r2 == null) return null;
 
         MethodInfo methodInfo;
@@ -725,18 +725,35 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
     }
 
 
-    /////////// TODO check valid parameter (sub)types     ////////////////////
-
     /**
      * f0 -> Expression()
      * f1 -> ExpressionTail()
      */
     public VisitorReturnInfo visit(ExpressionList n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        VisitorReturnInfo _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        return _ret;
+        VisitorReturnInfo r0 = n.f0.accept(this, argu);
+        if (r0 == null) return null;
+
+        // check that expression is of the correct type
+        VariableInfo argInfo = ST.lookupArgumentAtPos(argu.getSupername(), argu.getName(), 0);
+        if (!SemanticChecks.checkType(ST, new MiniJavaType(r0.getType(), r0.getName()), argInfo.getType())){
+            this.detectedSemanticError = true;
+            this.errorMsg = "Invalid parameter type in call for method \"" + argu.getName() + "\" of the class \"" + argu.getSupername();
+            this.errorMsg += " at pos " + argu.getArgNum() + " : expected " + argInfo.getType().getDebugInfo() + " but got " + (r0.getType() == TypeEnum.CUSTOM ? r0.getName() : r0.getType());
+            return null;
+        }
+
+        VisitorParameterInfo param = new VisitorParameterInfo(argu, 1);
+        n.f1.accept(this, param);
+
+        // check that all arguments have been covered
+        if (param.getArgNum() < ST.getNumberOfArguments(argu.getSupername(), argu.getName())){
+            this.detectedSemanticError = true;
+            this.errorMsg = "Less parameters than expected in call for method \"" + argu.getName() + "\" of the class \"" + argu.getSupername();
+            return null;
+        }
+
+        return null;
     }
 
     /**
@@ -753,12 +770,27 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(ExpressionTerm n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        n.f0.accept(this, argu);
-        return n.f1.accept(this, argu);
+        n.f0.accept(this, null);
+        VisitorReturnInfo r1 = n.f1.accept(this, argu);
+        if (r1 == null) return null;
+
+        // check that expression is of the correct type
+        VariableInfo argInfo = ST.lookupArgumentAtPos(argu.getSupername(), argu.getName(), argu.getArgNum());
+        if (argInfo == null) {
+            this.detectedSemanticError = true;
+            this.errorMsg = "More parameters than expected in call for method \"" + argu.getName() + "\" of the class \"" + argu.getSupername();
+            return null;
+        } else if (!SemanticChecks.checkType(ST, new MiniJavaType(r1.getType(), r1.getName()), argInfo.getType())){
+            this.detectedSemanticError = true;
+            this.errorMsg = "Invalid parameter type in call for method \"" + argu.getName() + "\" of the class \"" + argu.getSupername();
+            this.errorMsg += " at pos " + argu.getArgNum() + " : expected " + argInfo.getType().getDebugInfo() + " but got " + (r1.getType() == TypeEnum.CUSTOM ? r1.getName() : r1.getType());
+            return null;
+        }
+        argu.nextArg();    // augment argNum for next check (should work if we are DFSing, right? TODO: check)
+
+        return null;
     }
 
-
-    //////////////////////////////////////////////////////////////////////////
 
     /**
      * f0 -> NotExpression()
@@ -789,7 +821,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(IntegerLiteral n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        n.f0.accept(this, argu);
+        n.f0.accept(this, null);
         return new VisitorReturnInfo(TypeEnum.INTEGER);
     }
 
@@ -798,7 +830,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(TrueLiteral n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        n.f0.accept(this, argu);
+        n.f0.accept(this, null);
         return new VisitorReturnInfo(TypeEnum.BOOLEAN);
     }
 
@@ -807,7 +839,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(FalseLiteral n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        n.f0.accept(this, argu);
+        n.f0.accept(this, null);
         return new VisitorReturnInfo(TypeEnum.BOOLEAN);
     }
 
@@ -838,7 +870,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(ThisExpression n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        n.f0.accept(this, argu);
+        n.f0.accept(this, null);
         return new VisitorReturnInfo("this");
     }
 
@@ -851,9 +883,9 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(ArrayAllocationExpression n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        n.f0.accept(this, null);
+        n.f1.accept(this, null);
+        n.f2.accept(this, null);
         VisitorReturnInfo r3 = n.f3.accept(this, argu);
         if (r3 == null) return null;
         if ( !SemanticChecks.checkType(ST, new MiniJavaType(r3.getType(), r3.getName()), MiniJavaType.INTEGER) ) {
@@ -861,7 +893,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             this.errorMsg = "Invalid array size (not an integer) in an array allocation";
             return null;
         }
-        n.f4.accept(this, argu);
+        n.f4.accept(this, null);
         VisitorReturnInfo res = new VisitorReturnInfo(TypeEnum.INTARRAY);
         res.setAlloced(true);
         return res;
@@ -875,7 +907,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(AllocationExpression n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        n.f0.accept(this, argu);
+        n.f0.accept(this, null);
         VisitorReturnInfo r1 = n.f1.accept(this, new VisitorParameterInfo(null, null, null, "getType"));
 
         // check if custom type exists
@@ -885,8 +917,8 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             return null;
         }
 
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
+        n.f2.accept(this, null);
+        n.f3.accept(this, null);
         r1.setAlloced(true);
         return r1;
     }
@@ -897,7 +929,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(NotExpression n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        n.f0.accept(this, argu);
+        n.f0.accept(this, null);
         VisitorReturnInfo r1 = n.f1.accept(this, argu);
         return r1;
     }
@@ -909,9 +941,9 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(BracketExpression n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        n.f0.accept(this, argu);
+        n.f0.accept(this, null);
         VisitorReturnInfo r1 = n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        n.f2.accept(this, null);
         return r1;
     }
 

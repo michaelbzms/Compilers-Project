@@ -1,13 +1,17 @@
 package SymbolTable;
 
 import MiniJavaType.MiniJavaType;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
 public class MethodInfo {
     private MiniJavaType returnType;
-    private Map<String, VariableInfo> variables = new HashMap<String, VariableInfo>();  // variable name -> Variable Info
+    private Map<String, VariableInfo> variables = new HashMap<>();               // variable name -> Variable Info
+    private List<MyPair<String, VariableInfo>> arguments = new ArrayList<>();    // ordered list of pairs (name, varInfo)
 
     public MethodInfo(MiniJavaType _returnType){ returnType = _returnType; }
 
@@ -23,11 +27,33 @@ public class MethodInfo {
         return true;
     }
 
+    public boolean putArgumentInfo(String argumentName, VariableInfo argumentInfo){
+        // same as putVariableInfo but also adds it to list of (ordered) arguments
+        if ( variables.containsKey(argumentName) ){ return false; }
+        variables.put(argumentName, argumentInfo);
+        arguments.add(new MyPair<String, VariableInfo>(argumentName, argumentInfo));
+        return true;
+    }
+
+    public VariableInfo getArgumentInfoAtPos(int pos){
+        MyPair<String, VariableInfo> arg = arguments.get(pos);
+        return (arg != null) ? arg.getSecond() : null;
+    }
+
+    public int getNumberOfArguments(){
+        return arguments.size();
+    }
+
     ////////////////////////
     ////     DEBUG     /////
     ////////////////////////
     public void printDebugInfo() {
         System.out.println("      > return_type = " + returnType.getDebugInfo());
+        System.out.print("      > args: ");
+        for (MyPair<String, VariableInfo> arg : arguments ){
+            System.out.print(arg.getFirst() + ", ");
+        }
+        System.out.println("$");
         for (Map.Entry<String, VariableInfo> entry : variables.entrySet()) {
             System.out.println("      > variable_name = " + entry.getKey());
             VariableInfo variableInfo = entry.getValue();

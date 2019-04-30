@@ -52,7 +52,9 @@ class Dog extends Animal {
 
     public Animal getAnimalObj(){
         Animal dogInside;
+        int id;
         dogInside = new Dog();
+        id = dogInside.setId(3);
         return dogInside;
     }
 

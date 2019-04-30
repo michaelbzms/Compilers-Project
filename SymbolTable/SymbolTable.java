@@ -59,6 +59,16 @@ public class SymbolTable {
 		} else return false;
 	}
 
+	public boolean putArgument(String className, String methodName, String argumentName, VariableInfo argumentInfo){
+		ClassInfo classInfo = classes.get(className);
+		if (classInfo != null){
+			MethodInfo methodInfo = classInfo.getMethodInfo(methodName);
+			if (methodInfo != null){
+				return methodInfo.putArgumentInfo(argumentName, argumentInfo);
+			} else return false;
+		} else return false;
+	}
+
 	public boolean putMethod(String className, String methodName, MethodInfo methodInfo){
 		ClassInfo classInfo = classes.get(className);
 		if (classInfo != null){
@@ -84,13 +94,25 @@ public class SymbolTable {
 	}
 
 	public VariableInfo lookupVariable(String className, String methodName, String variableName){
-		if (this.getMainClassName() != null && this.getMainClassName().equals(className) && "main".equals(methodName)){
+		if (this.getMainClassName() != null && this.getMainClassName().equals(className)){
 			return this.lookupMainVariable(variableName);
 		} else {
 			ClassInfo classInfo = lookupClass(className);
 			if (classInfo != null) {
 				MethodInfo methodInfo = classInfo.getMethodInfo(methodName);
 				return (methodInfo != null) ? methodInfo.getVariableInfo(variableName) : null;
+			} else return null;
+		}
+	}
+
+	public VariableInfo lookupArgumentAtPos(String className, String methodName, int pos){
+		if (this.getMainClassName() != null && this.getMainClassName().equals(className)){
+			return null;  // main has no arguments (the one it has is not supported in MiniJava)
+		} else {
+			ClassInfo classInfo = lookupClass(className);
+			if (classInfo != null) {
+				MethodInfo methodInfo = classInfo.getMethodInfo(methodName);
+				return (methodInfo != null) ? methodInfo.getArgumentInfoAtPos(pos) : null;
 			} else return null;
 		}
 	}
@@ -111,6 +133,18 @@ public class SymbolTable {
 
 	public ClassInfo lookupClass(String className){
 		return (this.getMainClassName() != null && this.getMainClassName().equals(className)) ? mainClassInfo : classes.get(className);
+	}
+
+	public int getNumberOfArguments(String className, String methodName){
+		if (this.getMainClassName() != null && this.getMainClassName().equals(className)){
+			return 1;  // main has one arguments (but it is not supported in MiniJava)
+		} else {
+			ClassInfo classInfo = lookupClass(className);
+			if (classInfo != null) {
+				MethodInfo methodInfo = classInfo.getMethodInfo(methodName);
+				return (methodInfo != null) ? methodInfo.getNumberOfArguments() : 0;
+			} else return 0;
+		}
 	}
 
 

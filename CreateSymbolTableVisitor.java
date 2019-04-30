@@ -223,7 +223,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         VisitorReturnInfo r0 = n.f0.accept(this, null);
         VisitorReturnInfo r1 = n.f1.accept(this, null);
         if (r0 == null || r1 == null) return null;
-        boolean feedback = ST.putVariable(argu.getSupername(), argu.getName(), r1.getName(), new VariableInfo((r0.getType() == TypeEnum.CUSTOM) ? new MiniJavaType(r0.getName()) : new MiniJavaType(r0.getType())));
+        boolean feedback = ST.putArgument(argu.getSupername(), argu.getName(), r1.getName(), new VariableInfo((r0.getType() == TypeEnum.CUSTOM) ? new MiniJavaType(r0.getName()) : new MiniJavaType(r0.getType())));
         if (!feedback){
             this.detectedSemanticError = true;
             this.errorMsg = "duplicate parameter name \"" + r1.getName() + "\" in method \"" + argu.getName() + "\" of class \"" + argu.getSupername() + "\"";
