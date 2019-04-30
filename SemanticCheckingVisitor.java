@@ -1,3 +1,5 @@
+import MiniJavaType.*;
+import SymbolTable.*;
 import syntaxtree.*;
 import visitor.GJDepthFirst;
 
@@ -170,7 +172,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
 
         // check that expression is of the method's return type
         MethodInfo methodInfo = SemanticChecks.checkMethodExistsForCustomType(ST, argu.getName(), r2.getName());
-        if (methodInfo == null) { System.err.println("Warning: Missing method from SymbolTable?"); return null; }
+        if (methodInfo == null) { System.err.println("Warning: Missing method from SymbolTable.SymbolTable?"); return null; }
         if (!SemanticChecks.checkType(ST, new MiniJavaType(r10.getType(), r10.getName()), methodInfo.getReturnType())){
             this.detectedSemanticError = true;
             this.errorMsg = "Invalid return type of the method \"" + r2.getName() + "\": " + (r10.getType() != TypeEnum.CUSTOM ? r10.getType() : r10.getName()) + " instead of " + methodInfo.getReturnType().getDebugInfo();
@@ -365,7 +367,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         VisitorReturnInfo r0 = n.f0.accept(this, argu);
         if (r0 == null) return null;
 
-        // check if array-variable exists on the SymbolTable
+        // check if array-variable exists on the SymbolTable.SymbolTable
         VariableInfo varInfo;
         if (argu == null) {
             System.err.println("Missing parameter for assignment");

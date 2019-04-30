@@ -1,3 +1,4 @@
+import MiniJavaType.TypeEnum;
 
 public class VisitorReturnInfo {
     private String name = null;

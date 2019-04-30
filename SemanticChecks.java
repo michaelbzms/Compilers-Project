@@ -1,5 +1,9 @@
 /** This is a namespace of static functions used to perform semantic checks **/
 
+import MiniJavaType.MiniJavaType;
+import SymbolTable.*;
+import MiniJavaType.*;
+
 public class SemanticChecks {
 
     public static boolean checkType(SymbolTable ST, MiniJavaType givenType, MiniJavaType targetType){

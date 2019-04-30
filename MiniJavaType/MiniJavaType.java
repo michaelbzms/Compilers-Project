@@ -1,7 +1,5 @@
+package MiniJavaType;
 
-enum TypeEnum {
-    INTEGER, BOOLEAN, INTARRAY, CUSTOM
-}
 
 public class MiniJavaType {
     private TypeEnum type = null;
@@ -18,7 +16,7 @@ public class MiniJavaType {
 
     public MiniJavaType(TypeEnum _type, String _customTypeName){
         if (_type == TypeEnum.CUSTOM && _customTypeName == null) {
-            System.err.println("Warning: Custom type but not name given in MiniJavaType constructor");
+            System.err.println("Warning: Custom type but not name given in MiniJavaType.MiniJavaType constructor");
         } else if (_type == TypeEnum.CUSTOM){
             type = TypeEnum.CUSTOM;
             customTypeName = _customTypeName;
@@ -36,7 +34,7 @@ public class MiniJavaType {
     }
 
     // DEBUG
-    String getDebugInfo(){
+    public String getDebugInfo(){
         return (type == TypeEnum.CUSTOM ? customTypeName : type.toString());
     }
 

@@ -1,5 +1,6 @@
+import SymbolTable.SymbolTable;
 import syntaxtree.*;
-import visitor.*;
+
 import java.io.*;
 
 

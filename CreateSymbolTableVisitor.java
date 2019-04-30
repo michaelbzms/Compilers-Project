@@ -1,3 +1,5 @@
+import MiniJavaType.*;
+import SymbolTable.*;
 import syntaxtree.*;
 import visitor.GJDepthFirst;
 
@@ -108,7 +110,7 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         }
         if (!ST.putClass(r1.getName(), new ClassInfo(r3.getName()))){
             this.detectedSemanticError = true;
-            this.errorMsg = "duplicate declaration of class name \"" + r1.getName() + "\"";;
+            this.errorMsg = "duplicate declaration of class name \"" + r1.getName() + "\"";
             return null;
         }
         n.f4.accept(this, null);
