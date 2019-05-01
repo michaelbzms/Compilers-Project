@@ -45,8 +45,7 @@ public class SymbolTable {
 	}
 
 	public boolean putMainVariable(String variableName, VariableInfo variableInfo){
-		mainMethodInfo.putVariableInfo(variableName, variableInfo);
-		return true;
+		return mainMethodInfo.putVariableInfo(variableName, variableInfo);
 	}
 
 	public boolean putVariable(String className, String methodName, String variableName, VariableInfo variableInfo){

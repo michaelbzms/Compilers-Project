@@ -2,16 +2,50 @@ import MiniJavaType.MiniJavaType;
 
 public class SemanticErrors {
 
+    private static String giveEmptyContext(int beginLine){
+        return (beginLine > 0 ? "on line " + beginLine + "\n    " : "");
+    }
+
     private static String giveContext(int beginLine){
-        return "in main():" + (beginLine > 0 ? " line " + beginLine : "") + "\n    ";
+        return "in main()" + (beginLine > 0 ? " on line " + beginLine : "") + "\n    ";
     }
 
     private static String giveContext(int beginLine, String className){
-        return "in class \"" + className + "\":" + (beginLine > 0 ? " line " + beginLine : "") + "\n    ";
+        return "in class \"" + className + "\"" + (beginLine > 0 ? " on line " + beginLine : "") + "\n    ";
     }
 
     private static String giveContext(int beginLine, String className, String methodName){
-        return "in method \"" + methodName + "\" of the class \"" + className + "\":" + (beginLine > 0 ? " line " + beginLine : "") + "\n    ";
+        return "in method \"" + methodName + "\" of the class \"" + className + "\"" + (beginLine > 0 ? " on line " + beginLine : "") + "\n    ";
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+
+    public static String duplicateVarDeclaration(String varName, int beginLine){
+        return giveContext(beginLine) + "Duplicate variable name declaration of \"" + varName + "\"";
+    }
+
+    public static String duplicateVarDeclaration(String className, String methodName, String varName, int beginLine){
+        return giveContext(beginLine, className, methodName) + "Duplicate variable name declaration of \"" + varName + "\"";
+    }
+
+    public static String duplicateFieldDeclaration(String className, String fieldName, int beginLine){
+        return giveContext(beginLine, className) + "Duplicate field name declaration of \"" + fieldName + "\"";
+    }
+
+    public static String duplicateMethodDeclaration(String className, String methodName, int beginLine){
+        return giveContext(beginLine, className) + "Duplicate method name declaration of \"" + methodName + "\"";
+    }
+
+    public static String duplicateFormalParameter(String className, String methodName, String paramName, int beginLine){
+        return giveContext(beginLine, className, methodName) + "Duplicate parameter name declaration of \"" + paramName + "\"";
+    }
+
+    public static String duplicateClass(String className, int beginLine){
+        return giveEmptyContext(beginLine) + "Duplicate class name declaration of \"" + className + "\"";
+    }
+
+    public static String extendingNonDefinedYet(String className, String extendsClassName, int beginLine){
+        return giveEmptyContext(beginLine) + "Class \"" + extendsClassName + "\" has not been defined yet in \"class " + className + " extends " + extendsClassName + "\"";
     }
 
     ////////////////////////////////////////////////////////////////////////////////
