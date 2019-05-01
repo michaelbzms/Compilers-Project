@@ -37,7 +37,7 @@ public class MethodInfo {
 
     public VariableInfo getArgumentInfoAtPos(int pos){
         if (pos < 0 || pos >= arguments.size()) return null;
-        MyPair<String, VariableInfo> arg = arguments.get(pos+1);
+        MyPair<String, VariableInfo> arg = arguments.get(pos);
         return (arg != null) ? arg.getSecond() : null;
     }
 

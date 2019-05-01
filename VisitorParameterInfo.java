@@ -45,4 +45,8 @@ public class VisitorParameterInfo {
 
     public String getPurpose() { return purpose; }
     public void setPurpose(String purpose) { this.purpose = purpose; }
+
+    public String getClassNameToCall() { return null; }
+    public String getMethodNameToCall() { return null; }
+
 }
