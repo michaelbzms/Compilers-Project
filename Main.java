@@ -13,26 +13,26 @@ class Main {
 			    fis = new FileInputStream(args[i]);
 			    MiniJavaParser parser = new MiniJavaParser(fis);
 				Goal root = parser.Goal();
-				System.out.println("Program \"" + args[i] + "\" parsed successfully.");
+				System.out.println("Program \"" + args[i] + "\" parsed successfully.\n");
 
 				// Create Symbol Table
 				SymbolTable symbolTable = new SymbolTable();
 				CreateSymbolTableVisitor STVisitor = new CreateSymbolTableVisitor(symbolTable);
 			    root.accept(STVisitor, null);
 			    if (STVisitor.detectedSemanticError) {
-			    	System.out.println((STVisitor.errorMsg.equals("")) ? "Semantic error(1)" : "Semantic error(1): " + STVisitor.errorMsg);
+			    	System.out.println((STVisitor.errorMsg.equals("")) ? "Semantic error" : "Semantic error " + STVisitor.errorMsg);
 					System.out.print("\n");
 					continue;
 				}
 				// The Symbol Table has now been created //
 				if ( symbolTable.checkForCyclicInheritance() ){
-					System.out.println("Semantic error: Cyclic Inheritance detected\n");
+					System.out.println("Semantic error:\nCyclic Inheritance detected\n");
 					continue;
 				}
 				SemanticCheckingVisitor SCVisitor = new SemanticCheckingVisitor(symbolTable);
 				root.accept(SCVisitor, null);
 				if (SCVisitor.detectedSemanticError){
-					System.out.println((SCVisitor.errorMsg.equals("")) ? "Semantic error(2)" : "Semantic error(2): " + SCVisitor.errorMsg);
+					System.out.println((SCVisitor.errorMsg.equals("")) ? "Semantic error" : "Semantic error " + SCVisitor.errorMsg);
 					// Debug:
 					//symbolTable.printDebugInfo();
 					System.out.print("\n");

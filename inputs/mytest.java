@@ -1,14 +1,16 @@
 class mytest {
     public static void main(String[] a){
-        int anInteger;
+        int[] anInteger;
         boolean aBoolean;
+        anInteger[2] = 3;
     }
 }
 
 
 class MySecondTest extends mytest {
 
-    public boolean foo(){
+
+    public boolean foo(Car longa){
         return true;
     }
 
