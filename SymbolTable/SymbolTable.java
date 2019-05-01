@@ -109,10 +109,17 @@ public class SymbolTable {
 		if (this.getMainClassName() != null && this.getMainClassName().equals(className)){
 			return null;  // main has no arguments (the one it has is not supported in MiniJava)
 		} else {
-			ClassInfo classInfo = lookupClass(className);
-			if (classInfo != null) {
-				MethodInfo methodInfo = classInfo.getMethodInfo(methodName);
-				return (methodInfo != null) ? methodInfo.getArgumentInfoAtPos(pos) : null;
+            // (!) method might be inherited!
+            ClassInfo classInfo = lookupClass(className);
+            if (classInfo != null) {
+                MethodInfo methodInfo = classInfo.getMethodInfo(methodName);
+                String motherClassName = classInfo.getMotherClassName();
+                while (motherClassName != null && methodInfo == null) {
+                    classInfo = lookupClass(classInfo.getMotherClassName());
+                    methodInfo = lookupMethod(motherClassName, methodName);
+                    motherClassName = classInfo.getMotherClassName();
+                }
+                return (methodInfo != null) ? methodInfo.getArgumentInfoAtPos(pos) : null;
 			} else return null;
 		}
 	}
@@ -139,9 +146,16 @@ public class SymbolTable {
 		if (this.getMainClassName() != null && this.getMainClassName().equals(className)){
 			return 1;  // main has one arguments (but it is not supported in MiniJava)
 		} else {
+		    // (!) method might be inherited!
 			ClassInfo classInfo = lookupClass(className);
 			if (classInfo != null) {
 				MethodInfo methodInfo = classInfo.getMethodInfo(methodName);
+                String motherClassName = classInfo.getMotherClassName();
+                while (motherClassName != null && methodInfo == null) {
+                    classInfo = lookupClass(classInfo.getMotherClassName());
+                    methodInfo = lookupMethod(motherClassName, methodName);
+                    motherClassName = classInfo.getMotherClassName();
+                }
 				return (methodInfo != null) ? methodInfo.getNumberOfArguments() : 0;
 			} else return 0;
 		}

@@ -26,6 +26,12 @@ class Animal {
         return id;
     }
 
+    public int createId(int num1, int num2, int num3){
+        int num;
+        num = num1 + num2;
+        return num + num3;
+    }
+
     public int getId(){
         return id;
     }
@@ -39,6 +45,13 @@ class Dog extends Animal {
     public boolean informLegs(){
         numberOfLegs = 4;
         return true;
+    }
+
+    public int geeetAnInt(){
+        int[] a;
+        a = new int[1];
+        a[0] = 2;
+        return this.createId(1, a[0], 3);
     }
 
     public int getNumberOfLegs(){
