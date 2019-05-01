@@ -678,43 +678,54 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         if (r0.getType() != null && (r0.getType().getTypeEnum() != TypeEnum.CUSTOM)) {
             this.detectedSemanticError = true;
             if (argu.getType().equals("main")){
-                this.errorMsg = SemanticErrors.callingMethodOnNonObject(r0.getName(), r0.getBeginLine());
+                this.errorMsg = SemanticErrors.callingMethodOnNonObject(r0.getName(), r0.getType(), r0.getBeginLine());
             } else {
-                this.errorMsg = SemanticErrors.callingMethodOnNonObject(argu.getSupername(), argu.getName(), r0.getName(), r0.getBeginLine());
+                this.errorMsg = SemanticErrors.callingMethodOnNonObject(argu.getSupername(), argu.getName(), r0.getName(), r0.getType(), r0.getBeginLine());
             }
             return null;
         }
         else if (r0.getName() != null && r0.getName().equals("this")) {
             // check that method exists for "this"
-            if (argu.getType() == "main") {
-                this.detectedSemanticError = true;
-                this.errorMsg = "Main class cannot call methods with \"this\" as it cannot have any such methods";
-                return null;
-            } else if (argu.getType() == "method") {
+            if (argu.getType().equals("main") ) {
+                if (!r2.getName().equals("main")) {       // main class cannot have any other methods other than main()
+                    this.detectedSemanticError = true;
+                    this.errorMsg = SemanticErrors.methodDoesNotExist(ST.getMainClassName(), r2.getName(), r2.getBeginLine());
+                    return null;
+                }
+                //TODO: does this actually work?!
+                methodInfo = ST.lookupMethod(ST.getMainClassName(), "main");
+                classNameToCall = ST.getMainClassName();
+                methodNameToCall = "main";
+            } else {
                 methodInfo = SemanticChecks.checkMethodExistsForCustomType(ST, argu.getSupername(), r2.getName());
                 if (methodInfo == null) {
                     this.detectedSemanticError = true;
-                    this.errorMsg = "Class \"" + argu.getSupername() + "\" does not have a method \"" + r2.getName() + "\"";
+                    this.errorMsg = SemanticErrors.methodDoesNotExist(argu.getSupername(), argu.getName(), argu.getSupername(), r2.getName(), r2.getBeginLine());
                     return null;
                 }
                 classNameToCall = argu.getSupername();
                 methodNameToCall = r2.getName();
-            } else {
-                System.err.println("Warning: invalid arguments");
-                return null;
             }
         }
         else if (r0.getName() != null && r0.getName().equals("methodCall")) {
             // check that methodCall type has that method
             if (r0.getType().getTypeEnum() != TypeEnum.CUSTOM){
                 this.detectedSemanticError = true;
-                this.errorMsg = "Method called on a primitive type \"" + r0.getType().getDebugInfo() + "\"";
+                if (argu.getType().equals("main")){
+                    this.errorMsg = SemanticErrors.methodCalledOnPrimitiveType(r2.getName(), r0.getType(), r2.getBeginLine());
+                } else {
+                    this.errorMsg = SemanticErrors.methodCalledOnPrimitiveType(argu.getSupername(), argu.getName(), r2.getName(), r0.getType(), r2.getBeginLine());
+                }
                 return null;
             } else {
                 methodInfo = SemanticChecks.checkMethodExistsForCustomType(ST, r0.getType().getCustomTypeName(), r2.getName());
                 if (methodInfo == null){
                     this.detectedSemanticError = true;
-                    this.errorMsg = "Custom type \"" + r0.getType().getCustomTypeName() + "\" does not have a method \"" + r2.getName() + "\"";
+                    if (argu.getType().equals("main")){
+                        this.errorMsg = SemanticErrors.methodDoesNotExist(r0.getType().getDebugInfo(), r2.getName(), r2.getBeginLine());
+                    } else {
+                        this.errorMsg = SemanticErrors.methodDoesNotExist(argu.getSupername(), argu.getName(), r0.getType().getDebugInfo(), r2.getName(), r2.getBeginLine());
+                    }
                     return null;
                 }
                 classNameToCall = r0.getType().getCustomTypeName();
@@ -725,13 +736,21 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             // check if allocation type has that method
             if (r0.getType().getTypeEnum() != TypeEnum.CUSTOM){   // only possible for INTARRAY type
                 this.detectedSemanticError = true;
-                this.errorMsg = "Method called on newly allocated primitive type \"" + r0.getType().getDebugInfo() + "\"";
+                if (argu.getType().equals("main")){
+                    this.errorMsg = SemanticErrors.methodCalledOnPrimitiveType(r2.getName(), r0.getType(), r2.getBeginLine());
+                } else {
+                    this.errorMsg = SemanticErrors.methodCalledOnPrimitiveType(argu.getSupername(), argu.getName(), r2.getName(), r0.getType(), r2.getBeginLine());
+                }
                 return null;
             } else {
                 methodInfo = SemanticChecks.checkMethodExistsForCustomType(ST, r0.getType().getCustomTypeName(), r2.getName());
                 if (methodInfo == null){
                     this.detectedSemanticError = true;
-                    this.errorMsg = "Custom type \"" + r0.getType().getCustomTypeName() + "\" does not have a method \"" + r2.getName() + "\"";
+                    if (argu.getType().equals("main")){
+                        this.errorMsg = SemanticErrors.methodDoesNotExist(r0.getType().getDebugInfo(), r2.getName(), r2.getBeginLine());
+                    } else {
+                        this.errorMsg = SemanticErrors.methodDoesNotExist(argu.getSupername(), argu.getName(), r0.getType().getDebugInfo(), r2.getName(), r2.getBeginLine());
+                    }
                     return null;
                 }
                 classNameToCall = r0.getType().getCustomTypeName();
@@ -741,36 +760,40 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         else if (r0.getName() != null){
             // check that variable exists in context
             VariableInfo varInfo;
-            if ("main".equals(argu.getType())){
+            if (argu.getType().equals("main")){
                 varInfo = ST.lookupMainVariable(r0.getName());
                 if (varInfo == null) {
                     this.detectedSemanticError = true;
-                    this.errorMsg = SemanticErrors.useOfUndeclaredVariable(r0.getName(), r0.getBeginLine());
+                    this.errorMsg = SemanticErrors.useOfUndeclaredVariable(r0.getName(), r2.getBeginLine());
                     return null;
                 }
-            } else if ("method".equals(argu.getType())) {
+            } else {
                 varInfo = SemanticChecks.checkVariableOrFieldExists(ST, argu.getSupername(), argu.getName(), r0.getName());
                 if (varInfo == null) {
                     this.detectedSemanticError = true;
-                    this.errorMsg = SemanticErrors.useOfUndeclaredVariable(argu.getSupername(), argu.getName(), r0.getName(), r0.getBeginLine());
+                    this.errorMsg = SemanticErrors.useOfUndeclaredVariable(argu.getSupername(), argu.getName(), r0.getName(), r2.getBeginLine());
                     return null;
                 }
-            } else { System.err.println("Warning: invalid arguments: argu.getTypeEnum() = " + argu.getType()); return null; }
+            }
 
             // and that its class has that method
             if (varInfo.getType().getTypeEnum() != TypeEnum.CUSTOM){
                 this.detectedSemanticError = true;
                 if (argu.getType().equals("main")){
-                    this.errorMsg = SemanticErrors.callingMethodOnNonObject(r0.getName(), r0.getBeginLine());
+                    this.errorMsg = SemanticErrors.callingMethodOnNonObject(r0.getName(), r0.getType(), r2.getBeginLine());
                 } else {
-                    this.errorMsg = SemanticErrors.callingMethodOnNonObject(argu.getSupername(), argu.getName(), r0.getName(), r0.getBeginLine());
+                    this.errorMsg = SemanticErrors.callingMethodOnNonObject(argu.getSupername(), argu.getName(), r0.getName(), r0.getType(), r2.getBeginLine());
                 }
                 return null;
             }
             methodInfo = SemanticChecks.checkMethodExistsForCustomType(ST, varInfo.getType().getCustomTypeName(), r2.getName());
             if (methodInfo == null){
                 this.detectedSemanticError = true;
-                this.errorMsg = "Class \"" + varInfo.getType().getCustomTypeName() + "\" does not have a method \"" + r2.getName() + "\"";
+                if (argu.getType().equals("main")) {
+                    this.errorMsg = SemanticErrors.methodDoesNotExist(varInfo.getType().getDebugInfo(), r2.getName(), r2.getBeginLine());
+                } else {
+                    this.errorMsg = SemanticErrors.methodDoesNotExist(argu.getSupername(), argu.getName(), varInfo.getType().getDebugInfo(), r2.getName(), r2.getBeginLine());
+                }
                 return null;
             }
             classNameToCall = varInfo.getType().getCustomTypeName();
@@ -797,7 +820,11 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         int temp;
         if (!n.f4.present() && (temp = ST.getNumberOfArguments(classNameToCall, methodNameToCall)) > 0){
             this.detectedSemanticError = true;
-            this.errorMsg = "Zero parameters given but expected " + temp + " in call for method \"" + methodNameToCall + "\" of the class \"" + classNameToCall + "\"";
+            if (argu.getType().equals("main")){
+                this.errorMsg = SemanticErrors.lessParametersThanExpected(argu.getClassNameToCall(), argu.getMethodNameToCall(), temp, 0, r2.getBeginLine());
+            } else {
+                this.errorMsg = SemanticErrors.lessParametersThanExpected(argu.getSupername(), argu.getName(), argu.getClassNameToCall(), argu.getMethodNameToCall(), temp, 0, r2.getBeginLine());
+            }
             return null;
         }
 
@@ -824,8 +851,12 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
                 System.err.println("Warning: could not find argInfo even though we should be able to!");
             } else if (!SemanticChecks.checkType(ST, r0.getType(), argInfo.getType())) {
                 this.detectedSemanticError = true;
-                this.errorMsg = "Invalid parameter type in call for method \"" + argu.getMethodNameToCall() + "\" of the class \"" + argu.getClassNameToCall();
-                this.errorMsg += "\" at pos " + argu.getArgNum() + " : expected " + argInfo.getType().getDebugInfo() + " but got " + r0.getType().getDebugInfo();
+                String situation = "parameter type in call for method \"" + argu.getMethodNameToCall() + "\" of the class \"" + argu.getClassNameToCall() + "\" at pos " + argu.getArgNum();
+                if (argu.getType().equals("main")){
+                    this.errorMsg = SemanticErrors.expectedCertainType(situation, argInfo.getType(), r0.getType(), r0.getBeginLine());
+                } else {
+                    this.errorMsg = SemanticErrors.expectedCertainType(argu.getSupername(), argu.getName(), situation, argInfo.getType(), r0.getType(), r0.getBeginLine());
+                }
                 return null;
             }
         }
@@ -838,7 +869,11 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         int temp;
         if (param.getArgNum() < (temp = ST.getNumberOfArguments(argu.getClassNameToCall(), argu.getMethodNameToCall()))){
             this.detectedSemanticError = true;
-            this.errorMsg = "Less parameters than expected, got " + param.getArgNum() + " but expected " + temp + " in call for method \"" + argu.getMethodNameToCall() + "\" of the class \"" + argu.getClassNameToCall() + "\"";
+            if (argu.getType().equals("main")){
+                this.errorMsg = SemanticErrors.lessParametersThanExpected(argu.getClassNameToCall(), argu.getMethodNameToCall(), temp, param.getArgNum(), r0.getBeginLine());
+            } else {
+                this.errorMsg = SemanticErrors.lessParametersThanExpected(argu.getSupername(), argu.getName(), argu.getClassNameToCall(), argu.getMethodNameToCall(), temp, param.getArgNum(), r0.getBeginLine());
+            }
             return null;
         }
 
@@ -866,12 +901,20 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         VariableInfo argInfo = ST.lookupArgumentAtPos(argu.getClassNameToCall(), argu.getMethodNameToCall(), argu.getArgNum());
         if (argInfo == null) {
             this.detectedSemanticError = true;
-            this.errorMsg = "More parameters than expected (" + ST.getNumberOfArguments(argu.getClassNameToCall(), argu.getMethodNameToCall()) + ") in call for method \"" + argu.getMethodNameToCall() + "\" of the class \"" + argu.getClassNameToCall() + "\"";
+            if (argu.getType().equals("main")){
+                this.errorMsg = SemanticErrors.moreParametersThanExpected(argu.getClassNameToCall(), argu.getMethodNameToCall(), ST.getNumberOfArguments(argu.getClassNameToCall(), argu.getMethodNameToCall()), r1.getBeginLine());
+            } else {
+                this.errorMsg = SemanticErrors.moreParametersThanExpected(argu.getSupername(), argu.getName(), argu.getClassNameToCall(), argu.getMethodNameToCall(), ST.getNumberOfArguments(argu.getClassNameToCall(), argu.getMethodNameToCall()), r1.getBeginLine());
+            }
             return null;
         } else if (!SemanticChecks.checkType(ST, r1.getType(), argInfo.getType())){
             this.detectedSemanticError = true;
-            this.errorMsg = "Invalid parameter type in call for method \"" + argu.getMethodNameToCall() + "\" of the class \"" + argu.getClassNameToCall() + "\"";
-            this.errorMsg += " at pos " + argu.getArgNum() + " : expected " + argInfo.getType().getDebugInfo() + " but got " + r1.getType().getDebugInfo();
+            String situation = "parameter type in call for method \"" + argu.getMethodNameToCall() + "\" of the class \"" + argu.getClassNameToCall() + "\" at pos " + argu.getArgNum();
+            if (argu.getType().equals("main")){
+                this.errorMsg = SemanticErrors.expectedCertainType(situation, argInfo.getType(), r1.getType(), r1.getBeginLine());
+            } else {
+                this.errorMsg = SemanticErrors.expectedCertainType(argu.getSupername(), argu.getName(), situation, argInfo.getType(), r1.getType(), r1.getBeginLine());
+            }
             return null;
         }
         argu.nextArg();    // augment argNum for next check
@@ -1012,11 +1055,19 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         // check if it is a custom type and that it exists
         if ( r1.getType().getTypeEnum() == TypeEnum.CUSTOM && ST.lookupClass(r1.getType().getCustomTypeName()) == null ){
             this.detectedSemanticError = true;
-            this.errorMsg = "Tried to allocate an object of a non-existant custom type: \"" + r1.getType().getCustomTypeName() + "\"";
+            if (argu.getType().equals("main")){
+                this.errorMsg = SemanticErrors.nonExistantType("allocating a new object", r1.getType().getDebugInfo(), r1.getBeginLine());
+            } else {
+                this.errorMsg = SemanticErrors.nonExistantType(argu.getSupername(), argu.getName(), "allocating a new object", r1.getType().getDebugInfo(), r1.getBeginLine());
+            }
             return null;
         } else if (r1.getType().getTypeEnum() != TypeEnum.CUSTOM ){
             this.detectedSemanticError = true;
-            this.errorMsg = "Tried to allocate an object of a primitive data type: \"" + r1.getType().getTypeEnum() + "\"";
+            if (argu.getType().equals("main")){
+                this.errorMsg = SemanticErrors.illegalAllocType(r1.getType(), r1.getBeginLine());
+            } else {
+                this.errorMsg = SemanticErrors.illegalAllocType(argu.getSupername(), argu.getName(), r1.getType(), r1.getBeginLine());
+            }
             return null;
         }
 
