@@ -3,15 +3,15 @@ import MiniJavaType.MiniJavaType;
 public class SemanticErrors {
 
     private static String giveContext(int beginLine){
-        return "in main():" + (beginLine > 0 ? " line " + beginLine : "") + "\n";
+        return "in main():" + (beginLine > 0 ? " line " + beginLine : "") + "\n    ";
     }
 
     private static String giveContext(int beginLine, String className){
-        return "in class \"" + className + "\":" + (beginLine > 0 ? " line " + beginLine : "") + "\n";
+        return "in class \"" + className + "\":" + (beginLine > 0 ? " line " + beginLine : "") + "\n    ";
     }
 
     private static String giveContext(int beginLine, String className, String methodName){
-        return "in method \"" + methodName + "\" of the class \"" + className + "\":" + (beginLine > 0 ? " line " + beginLine : "") + "\n";
+        return "in method \"" + methodName + "\" of the class \"" + className + "\":" + (beginLine > 0 ? " line " + beginLine : "") + "\n    ";
     }
 
     ////////////////////////////////////////////////////////////////////////////////

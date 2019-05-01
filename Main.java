@@ -39,7 +39,7 @@ class Main {
 				}
 				System.out.println("[√] Semantic check OK!");
 				// Debug:
-				symbolTable.printDebugInfo();
+				//symbolTable.printDebugInfo();
 				// TODO: print offsets
 			}
 			catch(ParseException ex){
