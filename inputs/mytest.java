@@ -7,12 +7,16 @@ class mytest {
 }
 
 
-class MySecondTest extends mytest {
+class MySecondTest extends MyThirdTest {
 
 
     public boolean foo(Car longa){
         return true;
     }
+
+}
+
+class MyThirdTest extends MySecondTest {
 
 }
 

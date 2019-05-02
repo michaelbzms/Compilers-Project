@@ -165,8 +165,27 @@ public class SymbolTable {
 	////  SEMANTIC CHECKING  /////
 	//////////////////////////////
 
+	// TODO: Might be obsolete since we check if B was declared at every "class A extends B"
+
+	private boolean checkForCircle(String className, ClassInfo classInfo){
+		while (classInfo.getMotherClassName() != null){
+			if (classInfo.getMotherClassName().equals(className)){   // detected circle
+				return true;
+			}
+			classInfo = lookupClass(classInfo.getMotherClassName());
+		}
+		return false;
+	}
+
 	public boolean checkForCyclicInheritance(){
-		//TODO
+		if (checkForCircle(mainClassName, mainClassInfo)){
+			return true;
+		}
+		for (Map.Entry<String, ClassInfo> c : classes.entrySet()) {
+			if (checkForCircle(c.getKey(), c.getValue())){
+				return true;
+			}
+		}
 		return false;
 	}
 
