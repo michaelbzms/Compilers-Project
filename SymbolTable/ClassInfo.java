@@ -50,6 +50,36 @@ public class ClassInfo {
         } else return false;
     }
 
+    public List<MyPair<String, VariableInfo>> getOrderedFields() {
+        return orderedFields;
+    }
+
+    public List<MyPair<String, MethodInfo>> getOrderedMethods() {
+        return orderedMethods;
+    }
+
+    public int getNextFieldOffset(SymbolTable ST){
+        int sum = 0;
+        if (motherClassName != null){
+            ClassInfo motherClass = ST.lookupClass(motherClassName);
+            if (motherClass != null) sum = motherClass.getNextFieldOffset(ST);
+        }
+        for (MyPair<String, VariableInfo> f : orderedFields){
+            sum += f.getSecond().getType().getOffsetOfType();
+        }
+        return sum;
+    }
+
+    public int getNextMethodOffset(SymbolTable ST){
+        int sum = 0;
+        if (motherClassName != null){
+            ClassInfo motherClass = ST.lookupClass(motherClassName);
+            if (motherClass != null) sum = motherClass.getNextFieldOffset(ST);
+        }
+        sum += orderedMethods.size() * 8;
+        return sum;
+    }
+
     ////////////////////////
     ////     DEBUG     /////
     ////////////////////////

@@ -7,16 +7,37 @@ class mytest {
 }
 
 
-class MySecondTest extends MyThirdTest {
+class A{
+    int i;
+    boolean flag;
+    int j;
+    public int foo() {
+        return 4;
+    }
+    public boolean fa() {
+        return true;
+    }
+}
+
+class B extends A{
+    A type;
+    int k;
+    int j;
+    public int foo() {
+        return 4;
+    }
+    public boolean bla() {
+        return true;
+    }
+}
+
+
+class MySecondTest extends mytest {
 
 
     public boolean foo(Car longa){
         return true;
     }
-
-}
-
-class MyThirdTest extends MySecondTest {
 
 }
 

@@ -1,6 +1,8 @@
 package MiniJavaType;
 
 
+import syntaxtree.Type;
+
 public class MiniJavaType {
     private TypeEnum type = null;
     private String customTypeName = null;
@@ -26,11 +28,21 @@ public class MiniJavaType {
     }
 
     public TypeEnum getTypeEnum() { return type; }
+
     public String getCustomTypeName() { return customTypeName; }
+
     public boolean isCustom() { return type == TypeEnum.CUSTOM && customTypeName != null; }
 
     public boolean equals(MiniJavaType other){
         return (this.type == other.type && (this.type != TypeEnum.CUSTOM || (this.getCustomTypeName() != null && this.customTypeName.equals(other.getCustomTypeName()))));
+    }
+
+    public int getOffsetOfType(){
+        if (type == TypeEnum.BOOLEAN) return 1;
+        else if (type == TypeEnum.INTEGER) return 4;
+        else if (type == TypeEnum.INTARRAY) return 8;
+        else if (type == TypeEnum.CUSTOM) return 8;
+        else return -1;
     }
 
     // DEBUG

@@ -2,7 +2,9 @@ package SymbolTable;
 
 import MiniJavaType.MiniJavaType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -28,6 +30,8 @@ public class SymbolTable {
 	private MethodInfo mainMethodInfo;
 	// Other (Custom) classes:
 	private Map<String, ClassInfo> classes = new HashMap<String, ClassInfo>();   // class name -> Class Info
+	private List<MyPair<String, ClassInfo>> orderedClasses = new ArrayList<>();   // used for printing their offsets in order
+
 
 	public SymbolTable(){
 		mainClassInfo = new ClassInfo();
@@ -85,6 +89,7 @@ public class SymbolTable {
 	public boolean putClass(String className, ClassInfo classInfo){
 		if ( classes.containsKey(className) ) return false;
 		classes.put(className, classInfo);
+		orderedClasses.add(new MyPair<String, ClassInfo>(className, classInfo));
 		return true;
 	}
 
@@ -158,6 +163,10 @@ public class SymbolTable {
 				return (methodInfo != null) ? methodInfo.getNumberOfArguments() : 0;
 			} else return 0;
 		}
+	}
+
+	public List<MyPair<String, ClassInfo>> getOrderedClasses() {
+		return orderedClasses;
 	}
 
 

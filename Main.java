@@ -1,4 +1,4 @@
-import SymbolTable.SymbolTable;
+import SymbolTable.*;
 import syntaxtree.*;
 
 import java.io.*;
@@ -38,9 +38,12 @@ class Main {
 					continue;
 				}
 				System.out.println("[√] Semantic check OK!");
+				// print offsets
+				System.out.println("\nOffsets for given file's classes are: ");
+				printOffsets(symbolTable);
 				// Debug:
+				//System.out.println("\nDebug Info is:");
 				//symbolTable.printDebugInfo();
-				// TODO: print offsets
 			}
 			catch(ParseException ex){
 			    System.out.println("[x] Parsing error: " + ex.getMessage());
@@ -60,5 +63,32 @@ class Main {
 			}
 		}
     }
+
+    private static void printOffsets(SymbolTable ST){
+		for (MyPair<String, ClassInfo> c : ST.getOrderedClasses()){
+			int startingFieldOffset = 0, startingMethodOffset = 0;
+			if (c.getSecond().getMotherClassName() != null) {
+				ClassInfo motherClass = ST.lookupClass(c.getSecond().getMotherClassName());
+				if (motherClass != null) {
+					startingFieldOffset = motherClass.getNextFieldOffset(ST);
+					startingMethodOffset = motherClass.getNextMethodOffset(ST);
+				}
+			}
+			// print offsets for fields
+			for (MyPair<String, VariableInfo> f : c.getSecond().getOrderedFields()){
+				int offset = f.getSecond().getType().getOffsetOfType();
+				System.out.println(c.getFirst() + "." + f.getFirst() + " : " + (startingFieldOffset));
+				startingFieldOffset += offset;
+			}
+			// print offsets for methods
+			for (MyPair<String, MethodInfo> m : c.getSecond().getOrderedMethods()){
+				// only if method is a new one and not an @override
+				if (c.getSecond().getMotherClassName() == null || SemanticChecks.checkMethodExistsForCustomType(ST, c.getSecond().getMotherClassName(), m.getFirst()) == null) {
+					System.out.println(c.getFirst() + "." + m.getFirst() + " : " + (startingMethodOffset));
+					startingMethodOffset += 8;
+				}
+			}
+		}
+	}
 
 }
