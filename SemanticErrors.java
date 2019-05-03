@@ -48,6 +48,10 @@ public class SemanticErrors {
         return giveEmptyContext(beginLine) + "Class \"" + extendsClassName + "\" has not been defined yet in \"class " + className + " extends " + extendsClassName + "\"";
     }
 
+    public static String invalidOverride(String className, String methodName, int beginLine){
+        return giveContext(beginLine, className) + "Invalid override (mismatching signature) of method \"" + methodName + "\"";
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
 
     public static String cannotUseMainClassArg(String argName, int beginLine){

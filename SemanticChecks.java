@@ -43,11 +43,9 @@ public class SemanticChecks {
         if (methodInfo == null){
             ClassInfo classInfo = ST.lookupClass(customTypeName);
             if (classInfo != null) {
-                String motherClassName = classInfo.getMotherClassName();
                 classInfo = classInfo.getMotherClass();
                 while (classInfo != null && methodInfo == null) {
-                    methodInfo = ST.lookupMethod(motherClassName, methodName);
-                    motherClassName = classInfo.getMotherClassName();
+                    methodInfo = classInfo.getMethodInfo(methodName);
                     classInfo = classInfo.getMotherClass();
                 }
             }
@@ -87,6 +85,26 @@ public class SemanticChecks {
             }
         }
         return varInfo;
+    }
+
+    public static boolean checkThatIfOverrideThenCorrect(SymbolTable ST, String customTypeName, String methodName){
+        ClassInfo classInfo = ST.lookupClass(customTypeName);
+        if (classInfo == null) { System.err.println("Warning: wrong parameters to semantic check for override"); return true; }
+
+        MethodInfo thisMethodInfo = classInfo.getMethodInfo(methodName);
+        if (thisMethodInfo == null) { System.err.println("Warning: wrong parameters to semantic check for override"); return true; }
+
+        // TODO: could store a reference to methodInfo of overriding method to not search like below twice
+        // check if method is an override
+        classInfo = classInfo.getMotherClass();
+        MethodInfo otherMethodInfo = null;
+        while (classInfo != null && otherMethodInfo == null) {
+            otherMethodInfo = classInfo.getMethodInfo(methodName);
+            classInfo = classInfo.getMotherClass();
+        }
+
+        // and if it is then check if they have the same type with thisMethodInfo
+        return otherMethodInfo == null || thisMethodInfo.hasSameSignatureWith(otherMethodInfo);
     }
 
 }

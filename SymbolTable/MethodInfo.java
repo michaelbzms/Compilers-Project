@@ -50,6 +50,23 @@ public class MethodInfo {
         return arguments.size();
     }
 
+    public boolean hasSameSignatureWith(MethodInfo other){
+        // must have same return type
+        if (!this.getReturnType().equals(other.getReturnType())) return false;
+
+        // must have equal number of arguments
+        int numOfArgs;
+        if (( numOfArgs = this.getNumberOfArguments()) != other.getNumberOfArguments()) return false;
+
+        // those arguments must have 1-1 the same type
+        for (int i = 0 ; i < numOfArgs ; i++){
+            if ( ! this.getArgumentInfoAtPos(i).getType().equals( other.getArgumentInfoAtPos(i).getType() ) )
+                return false;
+        }
+
+        return true;
+    }
+
     ////////////////////////
     ////     DEBUG     /////
     ////////////////////////

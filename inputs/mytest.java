@@ -38,8 +38,8 @@ class C extends B {
         return 4;
     }
 
-    public int fa(){
-        return 2;
+    public boolean fa(){
+        return false;
     }
 
     public boolean blimblom(int num) {

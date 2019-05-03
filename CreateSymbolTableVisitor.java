@@ -188,11 +188,13 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         VisitorReturnInfo r1 = n.f1.accept(this, null);
         VisitorReturnInfo r2 = n.f2.accept(this, null);
         if (r1 == null || r2 == null) return null;
+
         if (!ST.putMethod(argu.getName(), r2.getName(), new MethodInfo(r1.getType()))){
             this.detectedSemanticError = true;
             this.errorMsg = SemanticErrors.duplicateMethodDeclaration(argu.getName(), r2.getName(), r2.getBeginLine());
             return null;
         }
+
         n.f3.accept(this, null);
         n.f4.accept(this, new VisitorParameterInfo(r2.getName(), argu.getName(),"method"));
         n.f5.accept(this, null);
@@ -203,6 +205,14 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         n.f10.accept(this, null);
         n.f11.accept(this, null);
         n.f12.accept(this, null);
+
+        // (!) Have to check after method declaration is added to SymbolTable so that it has all the arguments, etc
+        if (!SemanticChecks.checkThatIfOverrideThenCorrect(ST, argu.getName(), r2.getName())){
+            this.detectedSemanticError = true;
+            this.errorMsg = SemanticErrors.invalidOverride(argu.getName(), r2.getName(), r2.getBeginLine());
+            return null;
+        }
+
         return null;
     }
 
