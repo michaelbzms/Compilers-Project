@@ -103,12 +103,14 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
         n.f2.accept(this, null);
         VisitorReturnInfo r3 = n.f3.accept(this, null);
         if (r3 == null) return null;
-        if (ST.lookupClass(r3.getName()) == null){  // in "class B extends A", if A is not defined previously then error
+
+        ClassInfo motherClass = ST.lookupClass(r3.getName());
+        if (motherClass == null){  // in "class B extends A", if A is not defined previously then error
             this.detectedSemanticError = true;
             this.errorMsg = SemanticErrors.extendingNonDefinedYet(r1.getName(), r3.getName(), r3.getBeginLine());
             return null;
         }
-        if (!ST.putClass(r1.getName(), new ClassInfo(r3.getName()))){
+        if (!ST.putClass(r1.getName(), new ClassInfo(r3.getName(), motherClass))){
             this.detectedSemanticError = true;
             this.errorMsg = SemanticErrors.duplicateClass(r1.getName(), r1.getBeginLine());
             return null;

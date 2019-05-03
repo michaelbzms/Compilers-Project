@@ -118,10 +118,11 @@ public class SymbolTable {
             if (classInfo != null) {
                 MethodInfo methodInfo = classInfo.getMethodInfo(methodName);
                 String motherClassName = classInfo.getMotherClassName();
+                classInfo = classInfo.getMotherClass();
                 while (motherClassName != null && methodInfo == null) {
-                    classInfo = lookupClass(classInfo.getMotherClassName());
                     methodInfo = lookupMethod(motherClassName, methodName);
                     motherClassName = classInfo.getMotherClassName();
+                    classInfo = classInfo.getMotherClass();
                 }
                 return (methodInfo != null) ? methodInfo.getArgumentInfoAtPos(pos) : null;
 			} else return null;
@@ -155,10 +156,11 @@ public class SymbolTable {
 			if (classInfo != null) {
 				MethodInfo methodInfo = classInfo.getMethodInfo(methodName);
                 String motherClassName = classInfo.getMotherClassName();
-                while (motherClassName != null && methodInfo == null) {
-                    classInfo = lookupClass(classInfo.getMotherClassName());
+                classInfo = classInfo.getMotherClass();
+                while (classInfo != null && methodInfo == null) {
                     methodInfo = lookupMethod(motherClassName, methodName);
                     motherClassName = classInfo.getMotherClassName();
+                    classInfo = classInfo.getMotherClass();
                 }
 				return (methodInfo != null) ? methodInfo.getNumberOfArguments() : 0;
 			} else return 0;
@@ -174,8 +176,8 @@ public class SymbolTable {
 	////  SEMANTIC CHECKING  /////
 	//////////////////////////////
 
-	// TODO: Might be obsolete since we check if B was declared at every "class A extends B"
-
+	// Note: this check is obsolete and it is not necessary
+	// but I couldn't find the heart to delete it.
 	private boolean checkForCircle(String className, ClassInfo classInfo){
 		while (classInfo.getMotherClassName() != null){
 			if (classInfo.getMotherClassName().equals(className)){   // detected circle

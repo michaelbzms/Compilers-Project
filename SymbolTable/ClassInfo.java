@@ -12,11 +12,13 @@ public class ClassInfo {
     private Map<String, VariableInfo> fields = new HashMap<>();     // field name  -> SymbolTable.VariableInfo
     private Map<String, MethodInfo> methods = new HashMap<>();      // method name -> SymbolTable.MethodInfo
     private String motherClassName = null;    // name of the class this class extends (if it extends one)
+    private ClassInfo motherClass = null;     // reference to that class in the symbol table
 
     public ClassInfo() { }
 
-    public ClassInfo(String _motherClassName) {
+    public ClassInfo(String _motherClassName, ClassInfo _motherClass) {
         motherClassName = _motherClassName;
+        motherClass = _motherClass;
     }
 
     public VariableInfo getFieldInfo(String fieldName) { return fields.get(fieldName);}
@@ -24,6 +26,8 @@ public class ClassInfo {
     public MethodInfo getMethodInfo(String methodName) { return methods.get(methodName); }
 
     public String getMotherClassName() { return motherClassName; }
+
+    public ClassInfo getMotherClass() { return motherClass; }
 
     public boolean putFieldInfo(String fieldName, VariableInfo fieldInfo) {
         if (fields.containsKey(fieldName)) {
@@ -87,15 +91,6 @@ public class ClassInfo {
         if (getMotherClassName() != null) {
             System.out.println("  mother_class = " + getMotherClassName());
         }
-//        System.out.println("  Fields in order are: ");
-//        for (MyPair<String, VariableInfo> node : orderedFields){
-//            System.out.print(node.getFirst() + ": " + node.getSecond().getTypeEnum().getDebugInfo() + ", ");
-//        }
-//        System.out.println("$\n  Methods in order are: ");
-//        for (MyPair<String, MethodInfo> node : orderedMethods){
-//            System.out.print(node.getFirst() + ": " + node.getSecond().getReturnType().getDebugInfo() + ", ");
-//        }
-//        System.out.println("$\n");
         for (Map.Entry<String, VariableInfo> entry : fields.entrySet()) {
             System.out.println("   > field_name = " + entry.getKey());
             VariableInfo fieldInfo = entry.getValue();

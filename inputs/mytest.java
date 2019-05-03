@@ -7,7 +7,7 @@ class mytest {
 }
 
 
-class A{
+class A {
     int i;
     boolean flag;
     int j;
@@ -19,7 +19,7 @@ class A{
     }
 }
 
-class B extends A{
+class B extends A {
     A type;
     int k;
     int j;
@@ -27,6 +27,17 @@ class B extends A{
         return 4;
     }
     public boolean bla() {
+        return true;
+    }
+}
+
+class C extends B {
+    B type;
+
+    public int foo() {
+        return 4;
+    }
+    public boolean blimblom(int num) {
         return true;
     }
 }
@@ -43,9 +54,16 @@ class MySecondTest extends mytest {
 
 class Car {
     int numOfWheels;
+
+    public int moreId(int amount){
+        int id;
+        id = id + amount;
+        return id;
+    }
+
 }
 
-class Animal {
+class Animal extends Car {
     int id;
 
     public int setId(int _id) {
@@ -70,7 +88,7 @@ class Dog extends Animal {
     int numberOfLegs;
 
     public boolean informLegs(){
-        numberOfLegs = 4;
+        numberOfLegs = this.moreId(id);
         return true;
     }
 
@@ -83,11 +101,6 @@ class Dog extends Animal {
 
     public int getNumberOfLegs(){
         return numberOfLegs;
-    }
-
-    public int moreId(){
-        id = id + 1;
-        return id;
     }
 
     public Animal getAnimalObj(){
