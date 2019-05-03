@@ -476,10 +476,8 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         VisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r2 == null) return null;
 
-        // r2 must be primitive!
-        if (r2.getType().getTypeEnum() != TypeEnum.INTEGER &&
-            r2.getType().getTypeEnum() != TypeEnum.INTARRAY &&
-            r2.getType().getTypeEnum() != TypeEnum.BOOLEAN ){
+        // r2 must be primitive (int or boolean - no arrays as they are references)!
+        if (r2.getType().getTypeEnum() != TypeEnum.INTEGER && r2.getType().getTypeEnum() != TypeEnum.BOOLEAN ){
             this.detectedSemanticError = true;
             if ( argu.getType().equals("main") ) {
                 this.errorMsg = SemanticErrors.printStatementOnNonPrimitive(r2.getType(), r2.getBeginLine());
