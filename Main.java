@@ -38,12 +38,12 @@ class Main {
 				System.out.println("[√] Semantic check OK!");
 
 				// Print offsets
-				//System.out.println("\nOffsets for given file's classes are: ");
-				//printOffsets(symbolTable);
+				System.out.println("\nOffsets for given file's classes are: ");
+				printOffsets(symbolTable);
 
 				// Debug:
-				//System.out.println("\nDebug Info is:");
-				//symbolTable.printDebugInfo();
+				System.out.println("\nDebug Info is:");
+				symbolTable.printDebugInfo();
 			}
 			catch(ParseException ex){
 			    System.out.println("[x] Parsing error: " + ex.getMessage());
@@ -65,13 +65,12 @@ class Main {
     }
 
     private static void printOffsets(SymbolTable ST){
-    	//TODO: Bugged -> need to not cound overriden methods at getNextMethodOffset()!
 		for (MyPair<String, ClassInfo> c : ST.getOrderedClasses()){
 			int startingFieldOffset = 0, startingMethodOffset = 0;
 			ClassInfo motherClass = c.getSecond().getMotherClass();
 			if (motherClass != null) {
-				startingFieldOffset = motherClass.getNextFieldOffset(ST);
-				startingMethodOffset = motherClass.getNextMethodOffset(ST);
+				startingFieldOffset = motherClass.getNextFieldOffset();
+				startingMethodOffset = motherClass.getNextMethodOffset();
 			}
 			// print offsets for fields
 			for (MyPair<String, VariableInfo> f : c.getSecond().getOrderedFields()){
@@ -82,7 +81,7 @@ class Main {
 			// print offsets for methods
 			for (MyPair<String, MethodInfo> m : c.getSecond().getOrderedMethods()){
 				// only if method is a new one and not an @override
-				if (c.getSecond().getMotherClassName() == null || SemanticChecks.checkMethodExistsForCustomType(ST, c.getSecond().getMotherClassName(), m.getFirst()) == null) {
+				if (!m.getSecond().isOverride()) {
 					System.out.println(c.getFirst() + "." + m.getFirst() + " : " + (startingMethodOffset));
 					startingMethodOffset += 8;
 				}

@@ -42,6 +42,19 @@ public class ClassInfo {
         if (methods.containsKey(methodName)) {
             return false;
         }
+
+        // check if method is an override
+        ClassInfo classInfo = this.getMotherClass();
+        MethodInfo otherMethodInfo = null;
+        while (classInfo != null && otherMethodInfo == null) {
+            otherMethodInfo = classInfo.getMethodInfo(methodName);
+            classInfo = classInfo.getMotherClass();
+        }
+        // and if it is then set methodInfo's isOverride boolean before inserting it to this ClassInfo
+        if (otherMethodInfo != null){
+            methodInfo.setOverride();
+        }
+
         methods.put(methodName, methodInfo);
         orderedMethods.add(new MyPair<>(methodName, methodInfo));
         return true;
@@ -62,25 +75,22 @@ public class ClassInfo {
         return orderedMethods;
     }
 
-    public int getNextFieldOffset(SymbolTable ST){
+    public int getNextFieldOffset(){
         int sum = 0;
-        if (motherClassName != null){
-            ClassInfo motherClass = ST.lookupClass(motherClassName);
-            if (motherClass != null) sum = motherClass.getNextFieldOffset(ST);
-        }
+        if (motherClass != null) sum = motherClass.getNextFieldOffset();
         for (MyPair<String, VariableInfo> f : orderedFields){
             sum += f.getSecond().getType().getOffsetOfType();
         }
         return sum;
     }
 
-    public int getNextMethodOffset(SymbolTable ST){
+    public int getNextMethodOffset(){
         int sum = 0;
-        if (motherClassName != null){
-            ClassInfo motherClass = ST.lookupClass(motherClassName);
-            if (motherClass != null) sum = motherClass.getNextFieldOffset(ST);
+        if (motherClass != null) sum = motherClass.getNextMethodOffset();
+        for (MyPair<String, MethodInfo> m : orderedMethods){
+            // only add to offsets if it is a new method and not an @override
+            if (!m.getSecond().isOverride()) sum += 8;
         }
-        sum += orderedMethods.size() * 8;
         return sum;
     }
 

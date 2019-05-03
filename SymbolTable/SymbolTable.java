@@ -214,7 +214,7 @@ public class SymbolTable {
 		mainMethodInfo.printDebugInfo();
 		System.out.println("\nOther classes are: ");
 		for (Map.Entry<String, ClassInfo> entry : classes.entrySet()) {
-			System.out.println("> class_name = " + entry.getKey());
+			System.out.println("\n> class_name = " + entry.getKey());
 			ClassInfo classInfo = entry.getValue();
 			classInfo.printDebugInfo();
 		}

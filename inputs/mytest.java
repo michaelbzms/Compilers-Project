@@ -37,6 +37,11 @@ class C extends B {
     public int foo() {
         return 4;
     }
+
+    public int fa(){
+        return 2;
+    }
+
     public boolean blimblom(int num) {
         return true;
     }
