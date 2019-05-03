@@ -27,6 +27,12 @@ class Main {
 					continue;
 				}
 
+			    // Check if Main's name is the name of the file as per Java's requirements
+				if (!args[i].equals(symbolTable.getMainClassName())){
+					System.out.println("[x] Semantic error: file name \"" + args[i] + "\" does not match main class's name \"" + symbolTable.getMainClassName() + "\"");
+					continue;
+				}
+
 			    // Then call a second visitor to check all the rest of semantic errors
 				SemanticCheckingVisitor SCVisitor = new SemanticCheckingVisitor(symbolTable);
 				root.accept(SCVisitor, null);
@@ -42,8 +48,8 @@ class Main {
 				printOffsets(symbolTable);
 
 				// Debug:
-				System.out.println("\nDebug Info is:");
-				symbolTable.printDebugInfo();
+				//System.out.println("\nDebug Info is:");
+				//symbolTable.printDebugInfo();
 			}
 			catch(ParseException ex){
 			    System.out.println("[x] Parsing error: " + ex.getMessage());
@@ -65,6 +71,7 @@ class Main {
     }
 
     private static void printOffsets(SymbolTable ST){
+    	// TODO also store them because I am going to need it for the next assignment?
 		for (MyPair<String, ClassInfo> c : ST.getOrderedClasses()){
 			int startingFieldOffset = 0, startingMethodOffset = 0;
 			ClassInfo motherClass = c.getSecond().getMotherClass();
