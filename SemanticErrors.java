@@ -166,4 +166,12 @@ public class SemanticErrors {
         return giveContext(beginLine, className, methodName) + "Method \"" + calledMethod + "\" called on primitive type " + type.getDebugInfo();
     }
 
+    public static String printStatementOnNonPrimitive(MiniJavaType type, int beginLine){
+        return giveContext(beginLine) + "Print statements cannot be used for non primitive type " + type.getDebugInfo();
+    }
+
+    public static String printStatementOnNonPrimitive(String className, String methodName, MiniJavaType type, int beginLine){
+        return giveContext(beginLine, className, methodName) + "Print statements cannot be used for non primitive type " + type.getDebugInfo();
+    }
+
 }

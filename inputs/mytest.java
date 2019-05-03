@@ -2,6 +2,7 @@ class mytest {
     public static void main(String[] illegal){
         int[] anInteger;
         boolean aBoolean;
+        Car acar;
         anInteger[2] = 2;
     }
 }
@@ -52,6 +53,12 @@ class MySecondTest extends mytest {
 
 
     public boolean foo(Car longa){
+        Car acar;
+        int newid;
+        acar = longa;
+        if ( this.foo(new Car()) ) {
+            newid = longa.moreId(13);
+        } else newid = 0;
         return true;
     }
 
