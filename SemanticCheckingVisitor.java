@@ -292,6 +292,11 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             System.err.println("Missing parameter for assignment");
             return null;
         } else if ( argu.getType().equals("main") ){
+            if (r0.getName().equals(ST.getMainClassArg())){
+                this.detectedSemanticError = true;
+                this.errorMsg = SemanticErrors.cannotUseMainClassArg(r0.getName(), r0.getBeginLine());
+                return null;
+            }
             varInfo = ST.lookupMainVariable(r0.getName());
             if (varInfo == null) {
                 this.detectedSemanticError = true;
@@ -344,6 +349,11 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             System.err.println("Missing parameter for assignment");
             return null;
         } else if ( argu.getType().equals("main") ){
+            if (r0.getName().equals(ST.getMainClassArg())){
+                this.detectedSemanticError = true;
+                this.errorMsg = SemanticErrors.cannotUseMainClassArg(r0.getName(), r0.getBeginLine());
+                return null;
+            }
             varInfo = ST.lookupMainVariable(r0.getName());
             if (varInfo == null) {
                 this.detectedSemanticError = true;
@@ -761,6 +771,11 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             // check that variable exists in context
             VariableInfo varInfo;
             if (argu.getType().equals("main")){
+                if (r0.getName().equals(ST.getMainClassArg())){
+                    this.detectedSemanticError = true;
+                    this.errorMsg = SemanticErrors.cannotUseMainClassArg(r0.getName(), r0.getBeginLine());
+                    return null;
+                }
                 varInfo = ST.lookupMainVariable(r0.getName());
                 if (varInfo == null) {
                     this.detectedSemanticError = true;
@@ -992,6 +1007,12 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             }
         }
         else if (argu != null && argu.getPurpose() != null && argu.getPurpose().equals("getVariableType")){
+            if (n.f0.toString().equals(ST.getMainClassArg())){
+                // TODO: dangerous check
+                this.detectedSemanticError = true;
+                this.errorMsg = SemanticErrors.cannotUseMainClassArg(n.f0.toString(), n.f0.beginLine);
+                return null;
+            }
             VariableInfo varInfo = ST.lookupMainVariable(n.f0.toString());
             if (varInfo != null){
                 return new VisitorReturnInfo(n.f0.toString(), varInfo.getType(), n.f0.beginLine);

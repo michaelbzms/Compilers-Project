@@ -1,8 +1,8 @@
 class mytest {
-    public static void main(String[] a){
+    public static void main(String[] illegal){
         int[] anInteger;
         boolean aBoolean;
-        anInteger[2] = 3;
+        anInteger[2] = 2;
     }
 }
 

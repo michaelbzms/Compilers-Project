@@ -50,6 +50,10 @@ public class SemanticErrors {
 
     ////////////////////////////////////////////////////////////////////////////////
 
+    public static String cannotUseMainClassArg(String argName, int beginLine){
+        return giveContext(beginLine) + "Use of main()'s argument \"" + argName + "\" is illegal (MiniJava does not support the String type)";
+    }
+
     public static String useOfUndeclaredVariable(String varName, int beginLine){
         return giveContext(beginLine) + "Use of undeclared variable \"" + varName + "\"";
     }

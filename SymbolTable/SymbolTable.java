@@ -28,6 +28,7 @@ public class SymbolTable {
 	private String mainClassName = null;
 	private final ClassInfo mainClassInfo;
 	private MethodInfo mainMethodInfo;
+	private String mainClassArg = null;
 	// Other (Custom) classes:
 	private Map<String, ClassInfo> classes = new HashMap<String, ClassInfo>();   // class name -> Class Info
 	private List<MyPair<String, ClassInfo>> orderedClasses = new ArrayList<>();   // used for printing their offsets in order
@@ -41,14 +42,18 @@ public class SymbolTable {
 
 	public String getMainClassName() { return mainClassName; }
 
-	public boolean setMainClassName(String _mainClassName) {
+    public String getMainClassArg() { return mainClassArg; }
+
+	public boolean setMainClassNameAndArg(String _mainClassName, String _mainClassArg) {
 		if (mainClassName == null){
 			mainClassName = _mainClassName;
+			mainClassArg = _mainClassArg;
 			return true;
 		} else return false;
 	}
 
 	public boolean putMainVariable(String variableName, VariableInfo variableInfo){
+	    if (variableName != null && variableName.equals(mainClassArg)) return false;   // cannot use same name as arg
 		return mainMethodInfo.putVariableInfo(variableName, variableInfo);
 	}
 
