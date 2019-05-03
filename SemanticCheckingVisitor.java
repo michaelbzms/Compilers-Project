@@ -735,9 +735,9 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             if (r0.getType().getTypeEnum() != TypeEnum.CUSTOM){
                 this.detectedSemanticError = true;
                 if (argu.getType().equals("main")){
-                    this.errorMsg = SemanticErrors.methodCalledOnPrimitiveType(r2.getName(), r0.getType(), r2.getBeginLine());
+                    this.errorMsg = SemanticErrors.methodCalledOnNonObject(r2.getName(), r0.getType(), r2.getBeginLine());
                 } else {
-                    this.errorMsg = SemanticErrors.methodCalledOnPrimitiveType(argu.getSupername(), argu.getName(), r2.getName(), r0.getType(), r2.getBeginLine());
+                    this.errorMsg = SemanticErrors.methodCalledOnNonObject(argu.getSupername(), argu.getName(), r2.getName(), r0.getType(), r2.getBeginLine());
                 }
                 return null;
             } else {
@@ -760,9 +760,9 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             if (r0.getType().getTypeEnum() != TypeEnum.CUSTOM){   // only possible for INTARRAY type
                 this.detectedSemanticError = true;
                 if (argu.getType().equals("main")){
-                    this.errorMsg = SemanticErrors.methodCalledOnPrimitiveType(r2.getName(), r0.getType(), r2.getBeginLine());
+                    this.errorMsg = SemanticErrors.methodCalledOnNonObject(r2.getName(), r0.getType(), r2.getBeginLine());
                 } else {
-                    this.errorMsg = SemanticErrors.methodCalledOnPrimitiveType(argu.getSupername(), argu.getName(), r2.getName(), r0.getType(), r2.getBeginLine());
+                    this.errorMsg = SemanticErrors.methodCalledOnNonObject(argu.getSupername(), argu.getName(), r2.getName(), r0.getType(), r2.getBeginLine());
                 }
                 return null;
             } else {
@@ -1085,6 +1085,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
     public VisitorReturnInfo visit(AllocationExpression n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
         VisitorReturnInfo r1 = n.f1.accept(this, new VisitorParameterInfo(null, null, null, "getType"));
+        if (r1 == null) return null;
 
         // check if it is a custom type and that it exists
         if ( r1.getType().getTypeEnum() == TypeEnum.CUSTOM && ST.lookupClass(r1.getType().getCustomTypeName()) == null ){
@@ -1096,6 +1097,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             }
             return null;
         } else if (r1.getType().getTypeEnum() != TypeEnum.CUSTOM ){
+            // Note: This is probably never going to happen due to the parser not allowing "int" or "boolean" on type allocations
             this.detectedSemanticError = true;
             if (argu.getType().equals("main")){
                 this.errorMsg = SemanticErrors.illegalAllocType(r1.getType(), r1.getBeginLine());

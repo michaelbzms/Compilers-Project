@@ -166,12 +166,12 @@ public class SemanticErrors {
         return giveContext(beginLine, className, methodName) + "Class \"" + targetClass + "\" does not have a method \"" + targetMethod + "\"";
     }
 
-    public static String methodCalledOnPrimitiveType(String calledMethod, MiniJavaType type, int beginLine){
-        return giveContext(beginLine) + "Method \"" + calledMethod + "\" called on primitive type " + type.getDebugInfo();
+    public static String methodCalledOnNonObject(String calledMethod, MiniJavaType type, int beginLine){
+        return giveContext(beginLine) + "Method \"" + calledMethod + "\" called on non-object type " + type.getDebugInfo();
     }
 
-    public static String methodCalledOnPrimitiveType(String className, String methodName, String calledMethod, MiniJavaType type, int beginLine){
-        return giveContext(beginLine, className, methodName) + "Method \"" + calledMethod + "\" called on primitive type " + type.getDebugInfo();
+    public static String methodCalledOnNonObject(String className, String methodName, String calledMethod, MiniJavaType type, int beginLine){
+        return giveContext(beginLine, className, methodName) + "Method \"" + calledMethod + "\" called on non-object type " + type.getDebugInfo();
     }
 
     public static String printStatementOnNonPrimitive(MiniJavaType type, int beginLine){
