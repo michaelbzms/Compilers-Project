@@ -851,9 +851,9 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         if (!n.f4.present() && (temp = ST.getNumberOfArguments(classNameToCall, methodNameToCall)) > 0){
             this.detectedSemanticError = true;
             if (argu.getType().equals("main")){
-                this.errorMsg = SemanticErrors.lessParametersThanExpected(argu.getClassNameToCall(), argu.getMethodNameToCall(), temp, 0, r2.getBeginLine());
+                this.errorMsg = SemanticErrors.lessParametersThanExpected(classNameToCall, methodNameToCall, temp, 0, r2.getBeginLine());
             } else {
-                this.errorMsg = SemanticErrors.lessParametersThanExpected(argu.getSupername(), argu.getName(), argu.getClassNameToCall(), argu.getMethodNameToCall(), temp, 0, r2.getBeginLine());
+                this.errorMsg = SemanticErrors.lessParametersThanExpected(argu.getSupername(), argu.getName(), classNameToCall, methodNameToCall, temp, 0, r2.getBeginLine());
             }
             return null;
         }
@@ -1117,7 +1117,21 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(NotExpression n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        return n.f1.accept(this, argu);
+        VisitorReturnInfo r1 = n.f1.accept(this, argu);
+        if (r1 == null) return null;
+
+        // check that clause is boolean so that "not" can work
+        if (r1.getType().getTypeEnum() != TypeEnum.BOOLEAN ){
+            this.detectedSemanticError = true;
+            if (argu.getType().equals("main")){
+                this.errorMsg = SemanticErrors.badOperandForNot(r1.getType(), r1.getBeginLine()) ;
+            } else {
+                this.errorMsg = SemanticErrors.badOperandForNot(argu.getSupername(), argu.getName(), r1.getType(), r1.getBeginLine()) ;
+            }
+            return null;
+        }
+
+        return r1;
     }
 
     /**

@@ -126,6 +126,14 @@ public class SemanticErrors {
         return giveContext(beginLine, className, methodName) + "Bad operands for operator \"" + operator + "\", must be " + expectedType.getDebugInfo() + " instead given " + givenType1.getDebugInfo() + " and " + givenType2.getDebugInfo();
     }
 
+    public static String badOperandForNot(MiniJavaType givenType, int beginLine){
+        return giveContext(beginLine) + "Bad operand for operator \"!\", must be BOOLEAN instead given " + givenType.getDebugInfo();
+    }
+
+    public static String badOperandForNot(String className, String methodName, MiniJavaType givenType, int beginLine){
+        return giveContext(beginLine, className, methodName) + "Bad operand for operator \"!\", must be BOOLEAN instead given " + givenType.getDebugInfo();
+    }
+
     public static String callingMethodOnNonObject(String expr, MiniJavaType type, int beginLine){
         return giveContext(beginLine) + "Calling method on non-object \"" + (expr != null ? expr : "") + "\" of type " + type.getDebugInfo();
     }

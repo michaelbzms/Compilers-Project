@@ -15,8 +15,8 @@ class A {
     public int foo() {
         return 4;
     }
-    public boolean fa() {
-        return true;
+    public int fa() {
+        return 2;
     }
 }
 
@@ -36,15 +36,18 @@ class C extends B {
     B type;
 
     public int foo() {
-        return 4;
+        int num;
+        num = 1;
+        num = (new C().blimblom(num)).fa();
+        return num;
     }
 
-    public boolean fa(){
-        return false;
+    public int fa(){
+        return 1;
     }
 
-    public boolean blimblom(int num) {
-        return true;
+    public B blimblom(int num) {
+        return new B();
     }
 }
 
@@ -69,7 +72,14 @@ class Car {
 
     public int moreId(int amount){
         int id;
-        id = id + amount;
+        int[] arr;
+        boolean a;
+        a = ! ! true;
+        if (! a) {
+            arr = new int[id];
+            id = arr.length;
+        } else
+            id = id + amount;
         return id;
     }
 
@@ -100,8 +110,14 @@ class Dog extends Animal {
     int numberOfLegs;
 
     public boolean informLegs(){
+        Animal animal;
         numberOfLegs = this.moreId(id);
+        animal = this.giveAnimalgetDog(new Dog());
         return true;
+    }
+
+    public Animal giveAnimalgetDog(Animal animal){
+        return new Dog();
     }
 
     public int geeetAnInt(){
