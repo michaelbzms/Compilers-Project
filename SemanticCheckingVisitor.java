@@ -37,7 +37,6 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(MainClass n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        //n.f11.accept(this, argu);  //TODO: ignore this?
         n.f14.accept(this, new VisitorParameterInfo("main", "main"));
         n.f15.accept(this, new VisitorParameterInfo("main", "main"));
         return null;
@@ -710,15 +709,11 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         else if (r0.getName() != null && r0.getName().equals("this")) {
             // check that method exists for "this"
             if (argu.getType().equals("main") ) {
-                if (!r2.getName().equals("main")) {       // main class cannot have any other methods other than main()
-                    this.detectedSemanticError = true;
-                    this.errorMsg = SemanticErrors.methodDoesNotExist(ST.getMainClassName(), r2.getName(), r2.getBeginLine());
-                    return null;
-                }
-                //TODO: does this actually work?!
-                methodInfo = ST.lookupMethod(ST.getMainClassName(), "main");
-                classNameToCall = ST.getMainClassName();
-                methodNameToCall = "main";
+                // main class cannot have any methods and she cannot call main as it can pass a String parameter
+                // (it is actually a parsing error to call "main()")
+                this.detectedSemanticError = true;
+                this.errorMsg = SemanticErrors.methodDoesNotExist(ST.getMainClassName(), r2.getName(), r2.getBeginLine());
+                return null;
             } else {
                 methodInfo = SemanticChecks.checkMethodExistsForCustomType(ST, argu.getSupername(), r2.getName());
                 if (methodInfo == null) {
@@ -830,18 +825,6 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         else {
             System.err.println("Warning: Unexpected behaviour of method call");
             return null;
-        }
-
-
-        /// DEBUG /// TODO: remove from final
-        if (classNameToCall == null){
-            System.err.println("NULL className!");
-        } else if (ST.lookupClass(classNameToCall) == null){
-            System.err.println(classNameToCall + ": className is not the name of a class!");
-            throw new NullPointerException();
-        } else if (SemanticChecks.checkMethodExistsForCustomType(ST, classNameToCall, methodNameToCall) == null){
-            System.err.println(methodNameToCall + ": methodName does not exist in existing class!");
-            throw new NullPointerException();
         }
 
         // if no arguments are given the check that the method does need no arguments
@@ -1013,7 +996,6 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             if (varInfo != null){
                 return new VisitorReturnInfo(n.f0.toString(), varInfo.getType(), n.f0.beginLine);
             } else {
-                // TODO: dangerous check
                 this.detectedSemanticError = true;
                 this.errorMsg = SemanticErrors.useOfUndeclaredVariable(argu.getSupername(), argu.getName(), n.f0.toString(), n.f0.beginLine);
                 return null;
@@ -1021,7 +1003,6 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         }
         else if (argu != null && argu.getPurpose() != null && argu.getPurpose().equals("getVariableType")){
             if (n.f0.toString().equals(ST.getMainClassArg())){
-                // TODO: dangerous check
                 this.detectedSemanticError = true;
                 this.errorMsg = SemanticErrors.cannotUseMainClassArg(n.f0.toString(), n.f0.beginLine);
                 return null;
@@ -1030,7 +1011,6 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             if (varInfo != null){
                 return new VisitorReturnInfo(n.f0.toString(), varInfo.getType(), n.f0.beginLine);
             } else {
-                // TODO: dangerous check
                 this.detectedSemanticError = true;
                 this.errorMsg = SemanticErrors.useOfUndeclaredVariable(n.f0.toString(), n.f0.beginLine);
                 return null;
@@ -1045,7 +1025,8 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
     public VisitorReturnInfo visit(ThisExpression n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
         n.f0.accept(this, null);
-        return new VisitorReturnInfo("this", new MiniJavaType(TypeEnum.CUSTOM, argu.getSupername()), n.f0.beginLine);  // this is an object of the current class //TODO: right?
+        // "this" is an object of the current class
+        return new VisitorReturnInfo("this", new MiniJavaType(TypeEnum.CUSTOM, argu.getSupername()), n.f0.beginLine);
     }
 
     /**

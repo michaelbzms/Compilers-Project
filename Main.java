@@ -6,6 +6,8 @@ import java.io.*;
 
 class Main {
 
+	private static final boolean DEBUG_MODE = false;                 // set if you want to see debug information of the Symbol Table for correct inputs
+
     public static void main (String [] args){
 		for (int i = 0 ; i < args.length ; i++){                     // for each input file
 			FileInputStream fis = null;
@@ -48,8 +50,10 @@ class Main {
 				printOffsets(symbolTable);
 
 				// Debug:
-				//System.out.println("\nDebug Info is:");
-				//symbolTable.printDebugInfo();
+				if (DEBUG_MODE) {
+					System.out.println("\nDebug Info is:");
+					symbolTable.printDebugInfo();
+				}
 			}
 			catch(ParseException ex){
 			    System.out.println("[x] Parsing error: " + ex.getMessage());

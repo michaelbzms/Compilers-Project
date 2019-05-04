@@ -13,6 +13,8 @@ class A {
     boolean flag;
     int j;
     public int foo() {
+        mytest a;
+        a = new mytest();
         return 4;
     }
     public int fa() {
@@ -74,7 +76,7 @@ class Car {
         int id;
         int[] arr;
         boolean a;
-        a = ! ! true;
+        a = ! a;
         if (! a) {
             arr = new int[id];
             id = arr.length;
@@ -85,8 +87,15 @@ class Car {
 
 }
 
-class Animal extends Car {
+class truck extends Car {
+
+}
+
+class Animal  {
     int id;
+
+    MySecondTest f;
+
 
     public int setId(int _id) {
         id = _id;
@@ -108,6 +117,20 @@ class Animal extends Car {
 class Dog extends Animal {
 
     int numberOfLegs;
+
+    public int moreId(int amount){
+        int id;
+        int[] arr;
+        boolean a;
+        a = f.foo(new truck());
+        a = ! a;
+        if (! a) {
+            arr = new int[id];
+            id = arr.length;
+        } else
+            id = id + amount;
+        return id;
+    }
 
     public boolean informLegs(){
         Animal animal;

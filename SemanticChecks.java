@@ -94,7 +94,7 @@ public class SemanticChecks {
         MethodInfo thisMethodInfo = classInfo.getMethodInfo(methodName);
         if (thisMethodInfo == null) { System.err.println("Warning: wrong parameters to semantic check for override"); return true; }
 
-        // TODO: could store a reference to methodInfo of overriding method to not search like below twice
+        // Note: could store a reference to methodInfo of overriding method to not search like below twice
         // check if method is an override
         classInfo = classInfo.getMotherClass();
         MethodInfo otherMethodInfo = null;
