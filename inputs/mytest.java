@@ -1,166 +1,51 @@
 class mytest {
     public static void main(String[] illegal){
-        int[] anInteger;
-        boolean aBoolean;
-        Car acar;
-        anInteger[2] = 2;
+        int i;
+        boolean b;
+        int[] arr;
+        System.out.println(i);
+        System.out.println(i < (i+1));
     }
 }
 
-
 class A {
-    int i;
-    boolean flag;
-    int j;
-    public int foo() {
-        mytest a;
-        a = new mytest();
-        return 4;
+    int[] Afield;
+
+    public int[] afunct(int[] a1, int[] a2){
+        a2[0] = a1[1];
+        a1 = a2;
+        return new int[2];
     }
-    public int fa() {
-        return 2;
-    }
+
 }
 
 class B extends A {
-    A type;
-    int k;
-    int j;
-    public int foo() {
-        return 4;
+    int[] Bfield;
+
+    public int bfunct(int[] aarr, int i){
+        return aarr[(i + 1)];
     }
-    public boolean bla() {
-        return true;
-    }
+
 }
 
 class C extends B {
-    B type;
+    int[] Cfield;
 
-    public int foo() {
-        int num;
-        num = 1;
-        num = (new C().blimblom(num)).fa();
-        return num;
-    }
-
-    public int fa(){
-        return 1;
-    }
-
-    public B blimblom(int num) {
-        return new B();
-    }
-}
-
-
-class MySecondTest extends mytest {
-
-
-    public boolean foo(Car longa){
-        Car acar;
-        int newid;
-        acar = longa;
-        if ( this.foo(new Car()) ) {
-            newid = longa.moreId(13);
-        } else newid = 0;
-        return true;
+    public int[] afunct(int[] c1, int[] c2){
+        int[] res;
+        if ((c1[0]) < (c2[1])){
+            res = c1;
+        } else {
+            res = c2;
+        }
+        return res;
     }
 
 }
 
-class Car {
-    int numOfWheels;
-
-    public int moreId(int amount){
-        int id;
-        int[] arr;
-        boolean a;
-        a = ! a;
-        if (! a) {
-            arr = new int[id];
-            id = arr.length;
-        } else
-            id = id + amount;
-        return id;
-    }
+class D extends A {
+    int[] Dfield;
 
 }
 
-class truck extends Car {
-
-}
-
-class Animal  {
-    int id;
-
-    MySecondTest f;
-
-
-    public int setId(int _id) {
-        id = _id;
-        return id;
-    }
-
-    public int createId(int num1, int num2, int num3){
-        int num;
-        num = num1 + num2;
-        return num + num3;
-    }
-
-    public int getId(){
-        return id;
-    }
-
-}
-
-class Dog extends Animal {
-
-    int numberOfLegs;
-
-    public int moreId(int amount){
-        int id;
-        int[] arr;
-        boolean a;
-        a = f.foo(new truck());
-        a = ! a;
-        if (! a) {
-            arr = new int[id];
-            id = arr.length;
-        } else
-            id = id + amount;
-        return id;
-    }
-
-    public boolean informLegs(){
-        Animal animal;
-        numberOfLegs = this.moreId(id);
-        animal = this.giveAnimalgetDog(new Dog());
-        return true;
-    }
-
-    public Animal giveAnimalgetDog(Animal animal){
-        return new Dog();
-    }
-
-    public int geeetAnInt(){
-        int[] a;
-        a = new int[1];
-        a[0] = 2;
-        return this.createId(1, a[0], 3);
-    }
-
-    public int getNumberOfLegs(){
-        return numberOfLegs;
-    }
-
-    public Animal getAnimalObj(){
-        Animal dogInside;
-        int id;
-        dogInside = new Dog();
-        id = dogInside.setId(3);
-        return dogInside;
-    }
-
-}
 

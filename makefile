@@ -1,3 +1,5 @@
+GENERATED_ROOT_FILES = JavaCharStream.java MiniJavaParser.java MiniJavaParserConstants.java MiniJavaParserTokenManager.java ParseException.java Token.java TokenMgrError.java
+
 all: compile
 
 compile: ./*.java SymbolTable/*.java MiniJavaType/*.java
@@ -9,4 +11,8 @@ execute:
 	java Main
 
 clean:
-	rm -f *.class SymbolTable/*.class MiniJavaType/*.class *~
+	# remove generated stuff
+	rm -rf visitor/ syntaxtree/ MiniJava-jtb.jj
+	rm -f $(GENERATED_ROOT_FILES)
+	# remove .class files
+	rm -f *.class */*.class *~
