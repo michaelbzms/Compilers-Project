@@ -24,11 +24,13 @@ import java.util.Map;
 
 @SuppressWarnings("WeakerAccess")
 public class SymbolTable {
+
 	// Main class:
 	private String mainClassName = null;
 	private final ClassInfo mainClassInfo;
 	private MethodInfo mainMethodInfo;
 	private String mainClassArg = null;
+
 	// Other (Custom) classes:
 	private Map<String, ClassInfo> classes = new HashMap<String, ClassInfo>();   // class name -> Class Info
 	private List<MyPair<String, ClassInfo>> orderedClasses = new ArrayList<>();   // used for printing their offsets in order
@@ -133,6 +135,7 @@ public class SymbolTable {
 	}
 
 	public VariableInfo lookupField(String className, String fieldName){
+		// Warning: this method does not take into account inherited fields! (use one from SemanticChecks.java instead)
 		if (this.getMainClassName() != null && this.getMainClassName().equals(className))
 			return null;   // main class can have no fields
 		ClassInfo classInfo = lookupClass(className);
@@ -140,6 +143,7 @@ public class SymbolTable {
 	}
 
 	public MethodInfo lookupMethod(String className, String methodName){
+		// Warning: this method does not take into account inherited methods! (use one from SemanticChecks.java instead)
 		if (this.getMainClassName() != null && this.getMainClassName().equals(className))
 			return ("main".equals(methodName) ?  mainMethodInfo : null);
 		ClassInfo classInfo = lookupClass(className);
@@ -147,6 +151,7 @@ public class SymbolTable {
 	}
 
 	public ClassInfo lookupClass(String className){
+		// Note: takes into account main class as well
 		return (this.getMainClassName() != null && this.getMainClassName().equals(className)) ? mainClassInfo : classes.get(className);
 	}
 
@@ -178,7 +183,7 @@ public class SymbolTable {
 	//////////////////////////////
 
 	// Note: this check is obsolete and it is not necessary
-	// but I couldn't find the heart to delete it.
+	//       but I couldn't find the heart to delete it
 	private boolean checkForCircle(String className, ClassInfo classInfo){
 		while (classInfo.getMotherClassName() != null){
 			if (classInfo.getMotherClassName().equals(className)){   // detected circle

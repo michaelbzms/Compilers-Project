@@ -6,6 +6,7 @@ import visitor.GJDepthFirst;
 
 public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, VisitorParameterInfo> {
 
+    // Fields used to detect error and stop DFS
     public boolean detectedSemanticError = false;
     public String errorMsg = "";
     public SymbolTable ST;
@@ -13,6 +14,10 @@ public class CreateSymbolTableVisitor extends GJDepthFirst<VisitorReturnInfo, Vi
     public CreateSymbolTableVisitor(SymbolTable _ST){
         super();
         this.ST = _ST;
+        if (_ST == null) {
+            this.detectedSemanticError = true;
+            this.errorMsg = "Null Symbol Table parameter given";
+        }
     }
 
 
