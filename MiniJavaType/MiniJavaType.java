@@ -1,8 +1,6 @@
 package MiniJavaType;
 
 
-import syntaxtree.Type;
-
 public class MiniJavaType {
     private TypeEnum type = null;
     private String customTypeName = null;
