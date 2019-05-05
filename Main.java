@@ -29,12 +29,6 @@ class Main {
 					continue;
 				}
 
-			    // Check if Main's name is the name of the file as per Java's requirements
-				if (! keepOnlyTheFileName(args[i]).equals(symbolTable.getMainClassName())){
-					System.out.println("[x] Semantic error: file name \"" + keepOnlyTheFileName(args[i]) + "\" does not match main class's name \"" + symbolTable.getMainClassName() + "\"");
-					continue;
-				}
-
 			    // Then call a second visitor to check all the rest of semantic errors
 				SemanticCheckingVisitor SCVisitor = new SemanticCheckingVisitor(symbolTable);
 				root.accept(SCVisitor, null);
@@ -100,9 +94,5 @@ class Main {
 			}
 		}
 	}
-
-	private static String keepOnlyTheFileName(String input){
-        return input.substring(input.lastIndexOf('/') + 1, input.lastIndexOf('.'));
-    }
 
 }
