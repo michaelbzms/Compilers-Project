@@ -75,7 +75,7 @@ class Main {
     }
 
     private static void printOffsets(SymbolTable ST){
-    	// TODO also store them because I am going to need it for the next assignment?
+    	// Note: for the next assignment I should probably store them somewhere
 		for (MyPair<String, ClassInfo> c : ST.getOrderedClasses()){
 			int startingFieldOffset = 0, startingMethodOffset = 0;
 			ClassInfo motherClass = c.getSecond().getMotherClass();

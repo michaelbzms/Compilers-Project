@@ -395,9 +395,9 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         } else if ( !SemanticChecks.checkType(ST, r5.getType(), MiniJavaType.INTEGER) ) {
             this.detectedSemanticError = true;
             if ( argu.getType().equals("main") ) {
-                this.errorMsg = SemanticErrors.expectedInteger("array assignment value", r2.getType(), r2.getBeginLine());
+                this.errorMsg = SemanticErrors.expectedInteger("array assignment value", r5.getType(), r5.getBeginLine());
             } else {
-                this.errorMsg = SemanticErrors.expectedInteger(argu.getSupername(), argu.getName(), "array assignment value", r2.getType(), r2.getBeginLine());
+                this.errorMsg = SemanticErrors.expectedInteger(argu.getSupername(), argu.getName(), "array assignment value", r5.getType(), r5.getBeginLine());
             }
             return null;
         }
@@ -827,7 +827,7 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
             return null;
         }
 
-        // if no arguments are given the check that the method does need no arguments
+        // if no arguments are given the check that the method does indeed need no arguments
         int temp;
         if (!n.f4.present() && (temp = ST.getNumberOfArguments(classNameToCall, methodNameToCall)) > 0){
             this.detectedSemanticError = true;

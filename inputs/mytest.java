@@ -8,7 +8,7 @@ class mytest {
     }
 }
 
-class A {
+class A extends mytest {
     int[] Afield;
 
     public int[] afunct(int[] a1, int[] a2){
@@ -43,8 +43,14 @@ class C extends B {
 
 }
 
-class D extends A {
+class D extends B {
     int[] Dfield;
+
+    public boolean checkInheritanceAndArgs(){
+        int[] arr;
+        arr[arr[1]] = (this.afunct(arr, arr))[2];
+        return true;
+    }
 
 }
 

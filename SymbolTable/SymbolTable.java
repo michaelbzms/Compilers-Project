@@ -122,11 +122,9 @@ public class SymbolTable {
             ClassInfo classInfo = lookupClass(className);
             if (classInfo != null) {
                 MethodInfo methodInfo = classInfo.getMethodInfo(methodName);
-                String motherClassName = classInfo.getMotherClassName();
                 classInfo = classInfo.getMotherClass();
-                while (motherClassName != null && methodInfo == null) {
-                    methodInfo = lookupMethod(motherClassName, methodName);
-                    motherClassName = classInfo.getMotherClassName();
+                while (classInfo != null && methodInfo == null) {
+					methodInfo = classInfo.getMethodInfo(methodName);
                     classInfo = classInfo.getMotherClass();
                 }
                 return (methodInfo != null) ? methodInfo.getArgumentInfoAtPos(pos) : null;
@@ -160,11 +158,9 @@ public class SymbolTable {
 			ClassInfo classInfo = lookupClass(className);
 			if (classInfo != null) {
 				MethodInfo methodInfo = classInfo.getMethodInfo(methodName);
-                String motherClassName = classInfo.getMotherClassName();
                 classInfo = classInfo.getMotherClass();
                 while (classInfo != null && methodInfo == null) {
-                    methodInfo = lookupMethod(motherClassName, methodName);
-                    motherClassName = classInfo.getMotherClassName();
+                    methodInfo = classInfo.getMethodInfo(methodName);
                     classInfo = classInfo.getMotherClass();
                 }
 				return (methodInfo != null) ? methodInfo.getNumberOfArguments() : 0;
