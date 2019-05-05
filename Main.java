@@ -63,6 +63,7 @@ class Main {
 			}
 			finally {
 				if (i + 1 < args.length)
+					// Print a line to separate different inputs/outputs
 					System.out.println("----------------------------------------------");
 			    try {
 					if (fis != null) fis.close();

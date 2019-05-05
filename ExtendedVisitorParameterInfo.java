@@ -2,7 +2,6 @@
 public class ExtendedVisitorParameterInfo extends VisitorParameterInfo {
 
     private final String ClassNameToCall;
-
     private final String MethodNameToCall;
 
     public ExtendedVisitorParameterInfo(String curClassName, String curMethodName, String toCallClassname, String toCallMethodName, String _type){
