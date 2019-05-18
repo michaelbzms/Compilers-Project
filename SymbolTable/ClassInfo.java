@@ -50,9 +50,9 @@ public class ClassInfo {
             otherMethodInfo = classInfo.getMethodInfo(methodName);
             classInfo = classInfo.getMotherClass();
         }
-        // and if it is then set methodInfo's isOverride boolean before inserting it to this ClassInfo
+        // and if it is then set methodInfo's override field to that method before inserting it to this ClassInfo
         if (otherMethodInfo != null){
-            methodInfo.setOverride();
+            methodInfo.setOverride(otherMethodInfo);
         }
 
         methods.put(methodName, methodInfo);

@@ -12,7 +12,8 @@ public class MethodInfo {
     private MiniJavaType returnType;
     private Map<String, VariableInfo> variables = new HashMap<>();               // variable name -> Variable Info
     private List<MyPair<String, VariableInfo>> arguments = new ArrayList<>();    // ordered list of pairs (name, varInfo)
-    private boolean isOverride = false;
+    private MethodInfo override = null;
+    private int offset = -1;
 
     public MethodInfo(MiniJavaType _returnType){ returnType = _returnType; }
 
@@ -22,9 +23,11 @@ public class MethodInfo {
         return variables.get(variableName);
     }
 
-    public void setOverride(){ isOverride = true; }
+    public void setOverride(MethodInfo _override){ override = _override; }
 
-    public boolean isOverride(){ return isOverride; }
+    public MethodInfo getOverride() { return override; }
+
+    public boolean isOverride(){ return override != null; }
 
     public boolean putVariableInfo(String variableName, VariableInfo variableInfo){
         if ( variables.containsKey(variableName) ){ return false; }
@@ -65,6 +68,14 @@ public class MethodInfo {
         }
 
         return true;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
     }
 
     ////////////////////////
