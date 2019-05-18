@@ -1,3 +1,4 @@
+import LLVMCodeGeneration.LLVMCodeGeneratingVisitor;
 import SemanticAnalysis.CreateSymbolTableVisitor;
 import SemanticAnalysis.SemanticCheckingVisitor;
 import SymbolTable.*;
@@ -51,8 +52,8 @@ class Main {
 				}
 
 				// Generate .ll file
-
-
+				LLVMCodeGeneratingVisitor LLVMVisitor = new LLVMCodeGeneratingVisitor(convertToLLFile(args[i]));
+				root.accept(LLVMVisitor, null);
 			}
 			catch(ParseException ex){
 			    System.out.println("[x] Parsing error: " + ex.getMessage());
