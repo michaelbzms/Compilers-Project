@@ -1,4 +1,4 @@
-/** This is a namespace of static functions used to perform semantic checks **/
+package SemanticAnalysis; /** This is a namespace of static functions used to perform semantic checks **/
 
 import MiniJavaType.MiniJavaType;
 import SymbolTable.*;

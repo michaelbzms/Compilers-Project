@@ -135,7 +135,7 @@ public class SymbolTable {
 	}
 
 	public VariableInfo lookupField(String className, String fieldName){
-		// Warning: this method does not take into account inherited fields! (use one from SemanticChecks.java instead)
+		// Warning: this method does not take into account inherited fields! (use one from SemanticAnalysis.SemanticChecks.java instead)
 		if (this.getMainClassName() != null && this.getMainClassName().equals(className))
 			return null;   // main class can have no fields
 		ClassInfo classInfo = lookupClass(className);
@@ -143,7 +143,7 @@ public class SymbolTable {
 	}
 
 	public MethodInfo lookupMethod(String className, String methodName){
-		// Warning: this method does not take into account inherited methods! (use one from SemanticChecks.java instead)
+		// Warning: this method does not take into account inherited methods! (use one from SemanticAnalysis.SemanticChecks.java instead)
 		if (this.getMainClassName() != null && this.getMainClassName().equals(className))
 			return ("main".equals(methodName) ?  mainMethodInfo : null);
 		ClassInfo classInfo = lookupClass(className);

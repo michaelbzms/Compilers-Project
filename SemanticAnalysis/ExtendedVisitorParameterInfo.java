@@ -1,3 +1,4 @@
+package SemanticAnalysis;
 
 public class ExtendedVisitorParameterInfo extends VisitorParameterInfo {
 

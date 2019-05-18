@@ -1,6 +1,7 @@
+import SemanticAnalysis.CreateSymbolTableVisitor;
+import SemanticAnalysis.SemanticCheckingVisitor;
 import SymbolTable.*;
 import syntaxtree.*;
-
 import java.io.*;
 
 
@@ -41,13 +42,17 @@ class Main {
 
 				// Print offsets
 				System.out.println("\nOffsets for given file's classes are: ");
-				printOffsets(symbolTable);
+				symbolTable.calculateOffsets();
 
 				// Debug:
 				if (DEBUG_MODE) {
 					System.out.println("\nDebug Info is:");
 					symbolTable.printDebugInfo();
 				}
+
+				// Generate .ll file
+
+
 			}
 			catch(ParseException ex){
 			    System.out.println("[x] Parsing error: " + ex.getMessage());
@@ -69,30 +74,8 @@ class Main {
 		}
     }
 
-    private static void printOffsets(SymbolTable ST){
-    	// Note: for the next assignment I should probably store them somewhere
-		for (MyPair<String, ClassInfo> c : ST.getOrderedClasses()){
-			int startingFieldOffset = 0, startingMethodOffset = 0;
-			ClassInfo motherClass = c.getSecond().getMotherClass();
-			if (motherClass != null) {
-				startingFieldOffset = motherClass.getNextFieldOffset();
-				startingMethodOffset = motherClass.getNextMethodOffset();
-			}
-			// print offsets for fields
-			for (MyPair<String, VariableInfo> f : c.getSecond().getOrderedFields()){
-				int offset = f.getSecond().getType().getOffsetOfType();
-				System.out.println(c.getFirst() + "." + f.getFirst() + " : " + (startingFieldOffset));
-				startingFieldOffset += offset;
-			}
-			// print offsets for methods
-			for (MyPair<String, MethodInfo> m : c.getSecond().getOrderedMethods()){
-				// only if method is a new one and not an @override
-				if (!m.getSecond().isOverride()) {
-					System.out.println(c.getFirst() + "." + m.getFirst() + " : " + (startingMethodOffset));
-					startingMethodOffset += 8;
-				}
-			}
-		}
+	private static String convertToLLFile(String input){
+		return input.substring(0, input.lastIndexOf('.') + 1) + "ll";
 	}
 
 }

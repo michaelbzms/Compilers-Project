@@ -1,3 +1,5 @@
+package SemanticAnalysis;
+
 import MiniJavaType.*;
 import SymbolTable.*;
 import syntaxtree.*;

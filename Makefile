@@ -11,8 +11,8 @@ execute:
 	java Main
 
 clean:
-	# remove generated stuff
-	rm -rf visitor/ syntaxtree/ MiniJava-jtb.jj
-	rm -f $(GENERATED_ROOT_FILES)
+	# remove generated stuff?
+	# rm -rf visitor/ syntaxtree/ MiniJava-jtb.jj
+	# rm -f $(GENERATED_ROOT_FILES)
 	# remove .class files
 	rm -f *.class */*.class *~

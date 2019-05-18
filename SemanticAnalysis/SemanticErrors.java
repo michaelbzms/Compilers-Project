@@ -1,3 +1,5 @@
+package SemanticAnalysis;
+
 import MiniJavaType.MiniJavaType;
 
 public class SemanticErrors {
