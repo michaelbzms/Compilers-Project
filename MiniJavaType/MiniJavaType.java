@@ -56,4 +56,13 @@ public class MiniJavaType {
     public static final MiniJavaType INTARRAY = new MiniJavaType(TypeEnum.INTARRAY);
     public static final MiniJavaType VOID = new MiniJavaType(null, null);
 
+    // LLVM
+    public String getLLVMType(){
+        if (type == TypeEnum.CUSTOM) return "i8*";
+        else if (type == TypeEnum.INTEGER) return "i32";
+        else if (type == TypeEnum.INTARRAY) return "i32*";
+        else if (type == TypeEnum.BOOLEAN) return "i1*";
+        else return "?";   // should not happen
+    }
+
 }

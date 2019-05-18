@@ -52,7 +52,7 @@ class Main {
 				}
 
 				// Generate .ll file
-				LLVMCodeGeneratingVisitor LLVMVisitor = new LLVMCodeGeneratingVisitor(convertToLLFile(args[i]));
+				LLVMCodeGeneratingVisitor LLVMVisitor = new LLVMCodeGeneratingVisitor(symbolTable, convertToLLFile(args[i]));
 				root.accept(LLVMVisitor, null);
 			}
 			catch(ParseException ex){

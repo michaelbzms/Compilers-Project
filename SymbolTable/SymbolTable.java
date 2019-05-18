@@ -44,6 +44,8 @@ public class SymbolTable {
 
 	public String getMainClassName() { return mainClassName; }
 
+	public ClassInfo getMainClassInfo() { return mainClassInfo; }
+
     public String getMainClassArg() { return mainClassArg; }
 
 	public boolean setMainClassNameAndArg(String _mainClassName, String _mainClassArg) {

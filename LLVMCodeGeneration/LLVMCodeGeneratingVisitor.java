@@ -1,5 +1,6 @@
 package LLVMCodeGeneration;
 
+import SymbolTable.*;
 import visitor.GJDepthFirst;
 import syntaxtree.*;
 
@@ -7,9 +8,11 @@ import syntaxtree.*;
 public class LLVMCodeGeneratingVisitor extends GJDepthFirst<String, Void> {
 
     private FileWritter out;
+    private final SymbolTable ST;
 
 
-    public LLVMCodeGeneratingVisitor(String outputFilename){
+    public LLVMCodeGeneratingVisitor(SymbolTable _ST, String outputFilename){
+        ST = _ST;
         out = new FileWritter(outputFilename);
     }
 
@@ -20,9 +23,13 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<String, Void> {
      */
     public String visit(Goal n, Void argu) {
 
-        // TODO: emit VTable code
+        // generate VTable for main and all other classes
+        out.emit( "@." + ST.getMainClassName() + "_vtable = global [0 x i8*] []\n");
+        for (MyPair<String, ClassInfo> c : ST.getOrderedClasses()){
+            out.emit(LLVMCodeGenerating.generateVTableForClass(c.getFirst(), c.getSecond()) + "\n");
+        }
 
-        out.emit("declare i8* @calloc(i32, i32)\n" +
+        out.emit("\ndeclare i8* @calloc(i32, i32)\n" +
                 "declare i32 @printf(i8*, ...)\n" +
                 "declare void @exit(i32)\n" +
                 "\n" +
@@ -39,7 +46,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<String, Void> {
                 "    call i32 (i8*, ...) @printf(i8* %_str)\n" +
                 "    call void @exit(i32 1)\n" +
                 "    ret void\n" +
-                "}");
+                "}\n\n");
 
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
@@ -56,7 +63,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<String, Void> {
      * f2 -> "{"
      * f3 -> "public"
      * f4 -> "static"
-     * f5 -> "void"
+     * f5 -> "void"_ret
      * f6 -> "main"
      * f7 -> "("
      * f8 -> "String"
@@ -71,7 +78,9 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<String, Void> {
      * f17 -> "}"
      */
     public String visit(MainClass n, Void argu) {
-        String _ret=null;
+
+        out.emit("define i32 @main() {\n");
+
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
         n.f2.accept(this, argu);
@@ -90,7 +99,10 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<String, Void> {
         n.f15.accept(this, argu);
         n.f16.accept(this, argu);
         n.f17.accept(this, argu);
-        return _ret;
+
+        out.emit("}\n");
+
+        return null;
     }
 
     /**

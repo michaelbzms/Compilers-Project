@@ -94,6 +94,11 @@ public class ClassInfo {
         return sum;
     }
 
+    public int getTotalNumberOfMethods(){
+        // TODO: faster way?
+        return getNextMethodOffset() / 8;
+    }
+
     ////////////////////////
     ////     DEBUG     /////
     ////////////////////////

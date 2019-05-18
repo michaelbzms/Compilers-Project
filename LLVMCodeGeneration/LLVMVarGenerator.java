@@ -7,7 +7,7 @@ public class LLVMVarGenerator {
     public LLVMVarGenerator(){ }
     public LLVMVarGenerator(int starting_count){ counter = starting_count; }
 
-    public String getLocalVarName(){
+    public String generateLocalVarName(){
         return "%_" + counter++;
     }
 
