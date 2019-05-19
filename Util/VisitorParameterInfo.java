@@ -1,4 +1,4 @@
-package SemanticAnalysis;
+package Util;
 
 public class VisitorParameterInfo {
     private String name;

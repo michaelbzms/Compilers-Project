@@ -2,12 +2,12 @@ package LLVMCodeGeneration;
 
 import SymbolTable.ClassInfo;
 import SymbolTable.MethodInfo;
-import SymbolTable.MyPair;
+import Util.MyPair;
 
 
 public class LLVMCodeGenerating {
 
-    private static String getMethodSignature(String className, String methodName, MethodInfo methodInfo){
+    private static String getMethodType(String className, String methodName, MethodInfo methodInfo){
         String sig = methodInfo.getReturnType().getLLVMType();
         int argnum = methodInfo.getNumberOfArguments();
         sig += " (i8*";    // "this" ptr
@@ -30,7 +30,7 @@ public class LLVMCodeGenerating {
             String addon = "";
             for (MyPair<String, MethodInfo> m : currClass.getOrderedMethods()){
                 if (!m.getSecond().isOverride() && !m.getFirst().equals("main")){
-                    addon += "i8* bitcast (" + getMethodSignature(currClassName, m.getFirst(), m.getSecond()) + " to i8*)";
+                    addon += "i8* bitcast (" + getMethodType(currClassName, m.getFirst(), m.getSecond()) + " to i8*)";
                 }
             }
             if (!addon.equals("")) allMethodsOrdered = addon + (allMethodsOrdered.equals("") ? "" : ", ") + allMethodsOrdered;   // prepend (!)

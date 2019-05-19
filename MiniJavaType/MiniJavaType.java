@@ -61,7 +61,7 @@ public class MiniJavaType {
         if (type == TypeEnum.CUSTOM) return "i8*";
         else if (type == TypeEnum.INTEGER) return "i32";
         else if (type == TypeEnum.INTARRAY) return "i32*";
-        else if (type == TypeEnum.BOOLEAN) return "i1*";
+        else if (type == TypeEnum.BOOLEAN) return "i1";
         else return "?";   // should not happen
     }
 

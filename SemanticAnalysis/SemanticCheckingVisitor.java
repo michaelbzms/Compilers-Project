@@ -2,6 +2,9 @@ package SemanticAnalysis;
 
 import MiniJavaType.*;
 import SymbolTable.*;
+import Util.ExtendedVisitorParameterInfo;
+import Util.VisitorParameterInfo;
+import Util.VisitorReturnInfo;
 import syntaxtree.*;
 import visitor.GJDepthFirst;
 

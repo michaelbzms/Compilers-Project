@@ -1,4 +1,4 @@
-package SymbolTable;
+package Util;
 
 public class MyPair<A, B> {
     private final A a;

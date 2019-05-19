@@ -1,4 +1,4 @@
-package SemanticAnalysis;
+package Util;
 
 import MiniJavaType.*;
 

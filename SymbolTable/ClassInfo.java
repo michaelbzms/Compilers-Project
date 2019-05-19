@@ -1,5 +1,7 @@
 package SymbolTable;
 
+import Util.MyPair;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -88,8 +90,8 @@ public class ClassInfo {
         int sum = 0;
         if (motherClass != null) sum = motherClass.getNextMethodOffset();
         for (MyPair<String, MethodInfo> m : orderedMethods){
-            // only add to offsets if it is a new method and not an @override
-            if (!m.getSecond().isOverride()) sum += 8;
+            // only add to offsets if it is a new method and not an @override (and not the main method -> don't count it as inherited)
+            if (!m.getSecond().isOverride() && !m.getFirst().equals("main")) sum += 8;
         }
         return sum;
     }

@@ -1,6 +1,7 @@
 package SymbolTable;
 
 import MiniJavaType.MiniJavaType;
+import Util.MyPair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
