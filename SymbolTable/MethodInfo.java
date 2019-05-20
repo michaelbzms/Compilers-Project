@@ -54,6 +54,14 @@ public class MethodInfo {
         return arguments.size();
     }
 
+    public List<MyPair<String, VariableInfo>> getArgList(){
+        return arguments;
+    }
+
+    public Map<String, VariableInfo> getVariablesMap(){
+        return variables;
+    }
+
     public boolean hasSameSignatureWith(MethodInfo other){
         // must have same return type
         if (!this.getReturnType().equals(other.getReturnType())) return false;

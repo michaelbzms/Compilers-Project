@@ -1,5 +1,6 @@
 package LLVMCodeGeneration;
 
+import java.util.Map;
 import MiniJavaType.*;
 import SymbolTable.*;
 import Util.ExtendedVisitorReturnInfo;
@@ -157,11 +158,12 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      * f2 -> ";"
      */
     public ExtendedVisitorReturnInfo visit(VarDeclaration n, VisitorParameterInfo argu) {
-        ExtendedVisitorReturnInfo _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        return _ret;
+        //ExtendedVisitorReturnInfo r0 = n.f0.accept(this, argu);
+        //ExtendedVisitorReturnInfo r1 = n.f1.accept(this, argu);
+        //if (r0 == null || r1 == null) return null;
+        //out.emit("    %" + r1.getName() + " = alloca " + r0.getType().getLLVMType() + "\n");
+    	// this doesnt really work because it also is used on field declarations
+        return null;
     }
 
     /**
@@ -195,12 +197,29 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
 
         out.emit(") {\n");
 
-        n.f7.accept(this, new VisitorParameterInfo(r2.getName(), argu.getName(), "method"));
+        // allocate stack space for args in correct order //TODO: Do not do this if I use the following loop to allocate space for both local and arguments
+        //for ( MyPair<String, VariableInfo> v : methodInfo.getArgList() ){
+        //	out.emit("    %" + v.getFirst() + " = alloca " + v.getSecond().getType().getLLVMType() + "\n");
+        //}
+
+        // allocate space for arguments and local variables alike (order does not matter since we use these variables to store/load from/to them, right? TODO)
+        for ( Map.Entry<String, VariableInfo> v : methodInfo.getVariablesMap().entrySet() ){
+        	out.emit("    %" + v.getKey() + " = alloca " + v.getValue().getType().getLLVMType() + "\n");
+        }
+
+        //n.f7.accept(this, new VisitorParameterInfo(r2.getName(), argu.getName(), "method"));
         n.f8.accept(this, new VisitorParameterInfo(r2.getName(), argu.getName(), "method"));
 
-        //TODO: I have to group those probably
-        n.f9.accept(this, argu);
-        n.f10.accept(this, argu);
+        //n.f9.accept(this, argu);
+        ExtendedVisitorReturnInfo r10 = n.f10.accept(this, argu);
+        if (r10 == null) return null;
+
+        // hardcoded for now: (TODO: fix return of Expression)
+        if (methodInfo.getNumberOfArguments() > 0)
+        	r10.setResultVarName(methodInfo.getArgList().get(0).getFirst());
+
+        // TODO: what if return type is an object? -> we have to return a reference
+        out.emit("    ret " + methodInfo.getReturnType().getLLVMType() + " %" + r10.getResultVarName() + "\n");
 
         out.emit("}\n\n");
 
