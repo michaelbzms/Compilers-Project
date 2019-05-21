@@ -24,24 +24,56 @@ define void @throw_oob() {
 }
 
 define i32 @main() {
+    %_0 = add i32 %i, 1
     ret i32 0
 }
 
 define i32* @A.afunct(i8* %this, i32* %a1, i32* %a2) {
     %a1 = alloca i32*
     %a2 = alloca i32*
+    %_0 = add i32 1, 1
+    %_1 = getelementptr i32, i32* %a1, i32 %_0
+    %_2 = load i32, i32* %_1
+    %_3 = add i32 0, 1
+    %_4 = getelementptr i32, i32* %a2, i32 %_3
+    store i32 %_2, i32* %_4
+    store i32* %a2, i32** %a1
+    %_5 = add i32 2, 1
+    %_6 = call i8* @calloc(i32 4, i32 %_5)
+    store i32 2, i32* %_6
+    ret i32* %_6
+}
+
 define i32 @B.bfunct(i8* %this, i32* %aarr, i32 %i) {
     %i = alloca i32
     %aarr = alloca i32*
+    %_0 = add i32 %i, 1
+    %_1 = add i32 %_0, 1
+    %_2 = getelementptr i32, i32* %aarr, i32 %_1
+    %_3 = load i32, i32* %_2
+    ret i32 %_3
+}
+
 define i32* @C.afunct(i8* %this, i32* %c1, i32* %c2) {
     %res = alloca i32*
     %c1 = alloca i32*
     %c2 = alloca i32*
-    ret i32* %c1
+    %_0 = add i32 0, 1
+    %_1 = getelementptr i32, i32* %c1, i32 %_0
+    %_2 = load i32, i32* %_1
+    %_3 = add i32 1, 1
+    %_4 = getelementptr i32, i32* %c2, i32 %_3
+    %_5 = load i32, i32* %_4
+    store i32* %c1, i32** %res
+    store i32* %c2, i32** %res
+    ret i32* %res
 }
 
 define i1 @D.checkInheritanceAndArgs(i8* %this) {
     %arr = alloca i32*
-    ret i1 %null
+    %_0 = add i32 1, 1
+    %_1 = getelementptr i32, i32* %arr, i32 %_0
+    %_2 = load i32, i32* %_1
+    ret i1 1
 }
 

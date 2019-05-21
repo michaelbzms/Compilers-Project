@@ -11,4 +11,8 @@ public class LLVMVarGenerator {
         return "%_" + counter++;
     }
 
+    public void resetCounter(){
+        counter = 0;
+    }
+
 }
