@@ -351,7 +351,8 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
             String llvmType = varInfo.getType().getLLVMType();
             out.emit("    store " + llvmType + " " + r2.getResultVarNameOrConstant() + ", " + llvmType + "* " + r0.getResultVarNameOrConstant() + "\n");
         } else {
-            varInfo = ST.lookupField(argu.getSupername(), argu.getName());
+            // (IT COULD ALSO BE A FIELD OF A SUPERCLASS!)
+            varInfo = SemanticChecks.checkFieldExists(ST, argu.getSupername(), argu.getName(), r0.getName());
             if (varInfo != null){
                 // identifier is a field of "this" object
                 //TODO: implement once I implement object allocation

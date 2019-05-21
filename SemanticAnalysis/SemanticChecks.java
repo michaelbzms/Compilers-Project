@@ -87,6 +87,34 @@ public class SemanticChecks {
         return varInfo;
     }
 
+    public static VariableInfo checkFieldExists(SymbolTable ST, String customTypeName, String methodName, String varName){
+        if (ST == null || customTypeName == null || varName == null){
+            System.err.println("Null parameters to checkMethodExistsForCustomType()");
+            return null;
+        }
+        VariableInfo varInfo = null;
+
+        // If that fails then check if it is a field of customTypeName (local variables shadow fields)
+        if (varInfo == null){
+            varInfo = ST.lookupField(customTypeName, varName);
+        }
+
+        // if that fails then check if it is an inherited field of a superclass (local fields shadow superclass fields)
+        if (varInfo == null){
+            ClassInfo classInfo = ST.lookupClass(customTypeName);
+            if (classInfo != null) {
+                String motherClassName = classInfo.getMotherClassName();
+                classInfo = classInfo.getMotherClass();
+                while (classInfo != null && varInfo == null) {
+                    varInfo = ST.lookupField(motherClassName, varName);
+                    motherClassName = classInfo.getMotherClassName();
+                    classInfo = classInfo.getMotherClass();
+                }
+            }
+        }
+        return varInfo;
+    }
+
     public static boolean checkThatIfOverrideThenCorrect(SymbolTable ST, String customTypeName, String methodName){
         ClassInfo classInfo = ST.lookupClass(customTypeName);
         if (classInfo == null) { System.err.println("Warning: wrong parameters to semantic check for override"); return true; }
