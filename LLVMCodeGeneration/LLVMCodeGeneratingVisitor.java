@@ -15,13 +15,13 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
 
     private FileWritter out;
     private final SymbolTable ST;
-    private LLVMVarGenerator varGenerator;
+    private LLVMNameGenerator nameGenerator;
 
 
     public LLVMCodeGeneratingVisitor(SymbolTable _ST, String outputFilename){
         ST = _ST;
         out = new FileWritter(outputFilename);
-        varGenerator = new LLVMVarGenerator();
+        nameGenerator = new LLVMNameGenerator();
     }
 
     /**
@@ -186,7 +186,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      */
     public ExtendedVisitorReturnInfo visit(MethodDeclaration n, VisitorParameterInfo argu) {
 
-        varGenerator.resetCounter();   // set start of local var counter to 0
+        nameGenerator.resetLocalCounter();   // set start of local var var_counter to 0
 
         n.f1.accept(this, argu);
         ExtendedVisitorReturnInfo r2 = n.f2.accept(this, argu);
@@ -215,7 +215,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         n.f8.accept(this, new VisitorParameterInfo(r2.getName(), argu.getName(), "method"));
 
         //n.f9.accept(this, argu);
-        ExtendedVisitorReturnInfo r10 = n.f10.accept(this, argu);
+        ExtendedVisitorReturnInfo r10 = n.f10.accept(this, new VisitorParameterInfo(r2.getName(), argu.getName(), "method"));
         if (r10 == null) return null;
 
         // hardcoded for now: (TODO: fix return of Expression)
@@ -345,12 +345,17 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r0 == null || r2 == null) return null;
 
-        VariableInfo varInfo = ST.lookupVariable(argu.getSupername(), argu.getName(), r0.getName());
+        VariableInfo varInfo;
+        if (argu.getType().equals("main")) {
+            varInfo = ST.lookupMainVariable(r0.getName());
+        } else {
+            varInfo = ST.lookupVariable(argu.getSupername(), argu.getName(), r0.getName());
+        }
         if (varInfo != null){
             // identifier is a local variable
             String llvmType = varInfo.getType().getLLVMType();
             out.emit("    store " + llvmType + " " + r2.getResultVarNameOrConstant() + ", " + llvmType + "* " + r0.getResultVarNameOrConstant() + "\n");
-        } else {
+        } else if (!argu.getType().equals("main")) {
             // (IT COULD ALSO BE A FIELD OF A SUPERCLASS!)
             varInfo = SemanticChecks.checkFieldExists(ST, argu.getSupername(), argu.getName(), r0.getName());
             if (varInfo != null){
@@ -377,8 +382,8 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r5 = n.f5.accept(this, argu);
         if (r0 == null || r2 == null || r5 == null) return null;
 
-        String offsetplusone = varGenerator.generateLocalVarName();
-        String elemptr = varGenerator.generateLocalVarName();
+        String offsetplusone = nameGenerator.generateLocalVarName();
+        String elemptr = nameGenerator.generateLocalVarName();
         out.emit("    " + offsetplusone + " = add i32 " + r2.getResultVarNameOrConstant() + ", 1\n");   // negate length in 0 pos
         out.emit("    " + elemptr + " = getelementptr i32, i32* " + r0.getResultVarNameOrConstant() + ", i32 " + offsetplusone + "\n");
         out.emit("    store i32 " + r5.getResultVarNameOrConstant() + ", i32* " + elemptr + "\n");
@@ -396,15 +401,23 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      * f6 -> Statement()
      */
     public ExtendedVisitorReturnInfo visit(IfStatement n, VisitorParameterInfo argu) {
-        ExtendedVisitorReturnInfo _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
-        n.f6.accept(this, argu);
-        return _ret;
+        ExtendedVisitorReturnInfo r2 = n.f2.accept(this, argu);
+        if (r2 == null) return null;
+
+        String trueblock = nameGenerator.generateLabelName();
+        String falseblock = nameGenerator.generateLabelName();
+        String exit = nameGenerator.generateLabelName();
+
+        out.emit("    br i1 " + r2.getResultVarNameOrConstant() + ", label %" + trueblock + ", label %" + falseblock + "\n");
+        out.emit(trueblock + ":\n");
+        ExtendedVisitorReturnInfo r4 = n.f4.accept(this, argu);   // emits code for true-if
+        out.emit("    br label %" + exit + "\n");
+        out.emit(falseblock + ":\n");
+        ExtendedVisitorReturnInfo r6 = n.f6.accept(this, argu);   // emits code for false-if
+        out.emit("    br label %" + exit + "\n");
+        out.emit(exit + ":\n");
+
+        return null;
     }
 
     /**
@@ -415,13 +428,24 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      * f4 -> Statement()
      */
     public ExtendedVisitorReturnInfo visit(WhileStatement n, VisitorParameterInfo argu) {
-        ExtendedVisitorReturnInfo _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        return _ret;
+        String loopstart = nameGenerator.generateLabelName();  // before calculating r2 expression
+        String loopstmts = nameGenerator.generateLabelName();
+        String exit = nameGenerator.generateLabelName();
+
+        out.emit("    br label %" + loopstart + "\n");
+        out.emit(loopstart + ":\n");
+
+        ExtendedVisitorReturnInfo r2 = n.f2.accept(this, argu);   // emit code to calculate expression
+
+        out.emit("    br i1 " + r2.getResultVarNameOrConstant() + ", label %" + loopstmts + ", label %" + exit + "\n");
+        out.emit(loopstmts + ":\n");
+
+        n.f4.accept(this, argu);   // emit code of loop
+
+        out.emit("    br label %" + loopstart + "\n");
+        out.emit(exit + ":\n");
+
+        return null;
     }
 
     /**
@@ -453,7 +477,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      *       | Clause()
      */
     public ExtendedVisitorReturnInfo visit(Expression n, VisitorParameterInfo argu) {
-        return n.f0.accept(this, argu);
+        return n.f0.accept(this,  new VisitorParameterInfo(argu.getName(), argu.getSupername(), argu.getType(), "getVariable"));
     }
 
     /**
@@ -469,7 +493,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         // TODO: Short-circuiting!
         // for now:
 
-        String res = varGenerator.generateLocalVarName();
+        String res = nameGenerator.generateLocalVarName();
         out.emit("    " + res + " = and i1 " + r0.getResultVarNameOrConstant() + ", " + r2.getResultVarNameOrConstant() + "\n");
 
         return new ExtendedVisitorReturnInfo(MiniJavaType.BOOLEAN, res);
@@ -485,7 +509,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r0 == null || r2 == null) return null;
 
-        String res = varGenerator.generateLocalVarName();
+        String res = nameGenerator.generateLocalVarName();
         out.emit("    " + res + " = icmp slt i32 " + r0.getResultVarNameOrConstant() + ", " + r2.getResultVarNameOrConstant() + "\n");
 
         return new ExtendedVisitorReturnInfo(MiniJavaType.BOOLEAN, res);
@@ -501,7 +525,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r1 = n.f2.accept(this, argu);
         if (r0 == null || r1 == null) return null;
 
-        String res = varGenerator.generateLocalVarName();
+        String res = nameGenerator.generateLocalVarName();
         out.emit("    " + res + " = add i32 " + r0.getResultVarNameOrConstant() + ", " + r1.getResultVarNameOrConstant() + "\n");
 
         return new ExtendedVisitorReturnInfo(MiniJavaType.INTEGER, res);
@@ -517,7 +541,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r1 = n.f2.accept(this, argu);
         if (r0 == null || r1 == null) return null;
 
-        String res = varGenerator.generateLocalVarName();
+        String res = nameGenerator.generateLocalVarName();
         out.emit("    " + res + " = sub i32 " + r0.getResultVarNameOrConstant() + ", " + r1.getResultVarNameOrConstant() + "\n");
 
         return new ExtendedVisitorReturnInfo(MiniJavaType.INTEGER, res);
@@ -533,7 +557,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r1 = n.f2.accept(this, argu);
         if (r0 == null || r1 == null) return null;
 
-        String res = varGenerator.generateLocalVarName();
+        String res = nameGenerator.generateLocalVarName();
         out.emit("    " + res + " = mul i32 " + r0.getResultVarNameOrConstant() + ", " + r1.getResultVarNameOrConstant() + "\n");
 
         return new ExtendedVisitorReturnInfo(MiniJavaType.INTEGER, res);
@@ -551,9 +575,9 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r0 == null || r2 == null) return null;
 
-        String offsetplusone = varGenerator.generateLocalVarName();
-        String elemptr = varGenerator.generateLocalVarName();
-        String element = varGenerator.generateLocalVarName();
+        String offsetplusone = nameGenerator.generateLocalVarName();
+        String elemptr = nameGenerator.generateLocalVarName();
+        String element = nameGenerator.generateLocalVarName();
         out.emit("    " + offsetplusone + " = add i32 " + r2.getResultVarNameOrConstant() + ", 1\n");   // negate length in 0 pos
         out.emit("    " + elemptr + " = getelementptr i32, i32* " + r0.getResultVarNameOrConstant() + ", i32 " + offsetplusone + "\n");
         out.emit("    " + element + " = load i32, i32* " + elemptr + "\n");
@@ -570,7 +594,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r0 = n.f0.accept(this, argu);
         if (r0 == null) return null;
 
-        String len = varGenerator.generateLocalVarName();
+        String len = nameGenerator.generateLocalVarName();
         out.emit("    " + len + " = load i32, i32* " + r0.getResultVarNameOrConstant() + "\n");
 
         return new ExtendedVisitorReturnInfo(MiniJavaType.INTEGER, len);
@@ -589,7 +613,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo _ret=null;
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
+        n.f2.accept(this, new VisitorParameterInfo(argu.getName(), argu.getSupername(), argu.getType(), null));  // null purpose -> only get name
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
@@ -674,8 +698,32 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
     public ExtendedVisitorReturnInfo visit(Identifier n, VisitorParameterInfo argu) {
         if (argu != null && argu.getPurpose() != null && argu.getPurpose().equals("getType"))
             return new ExtendedVisitorReturnInfo(n.f0.toString(), new MiniJavaType(TypeEnum.CUSTOM, n.f0.toString()), n.f0.beginLine, null);
+        else if (argu != null && argu.getPurpose() != null && argu.getPurpose().equals("getVariable")){
+
+            String value = nameGenerator.generateLocalVarName();
+            VariableInfo varInfo;
+            if (argu.getType().equals("main")) {
+                varInfo = ST.lookupMainVariable(n.f0.toString());
+            } else {
+                varInfo = ST.lookupVariable(argu.getSupername(), argu.getName(), n.f0.toString());
+            }
+            if (varInfo != null){
+                // identifier is a local variable
+                String llvmType = varInfo.getType().getLLVMType();
+                out.emit("    " + value + " = load " + llvmType + ", " + llvmType + "* %" + n.f0.toString() + "\n");
+            } else if (!argu.getType().equals("main")) {
+                // (IT COULD ALSO BE A FIELD OF A SUPERCLASS!)
+                varInfo = SemanticChecks.checkFieldExists(ST, argu.getSupername(), argu.getName(), n.f0.toString());
+                if (varInfo != null){
+                    // identifier is a field of "this" object
+                    //TODO: implement once I implement object allocation
+                } else System.err.println("Unknown identifier in expression?!");  // should not happen cause of semantic checks
+            }
+
+            return new ExtendedVisitorReturnInfo(n.f0.toString(), null, n.f0.beginLine, value);
+        }
         else
-            return new ExtendedVisitorReturnInfo(n.f0.toString(), null, n.f0.beginLine, "%" + n.f0.toString());  // in case we want a variable
+            return new ExtendedVisitorReturnInfo(n.f0.toString(), null, n.f0.beginLine, "%" + n.f0.toString());  // in case we want an LLVM variable (this would be a pointer not the value!)
     }
 
     /**
@@ -696,8 +744,8 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r3 = n.f3.accept(this, argu);
         if (r3 == null) return null;
 
-        String lenplusone = varGenerator.generateLocalVarName();
-        String arr = varGenerator.generateLocalVarName();
+        String lenplusone = nameGenerator.generateLocalVarName();
+        String arr = nameGenerator.generateLocalVarName();
         out.emit("    " + lenplusone + " = add i32 " + r3.getResultVarNameOrConstant() + ", 1\n");
         out.emit("    " + arr + " = call i8* @calloc(i32 4, i32 " + lenplusone + ")\n");
         // (!) Store length of array at its first element - real elements start from 1... (REMEMBER)
@@ -732,7 +780,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r1 = n.f1.accept(this, argu);
         if (r1 == null) return null;
 
-        String res = varGenerator.generateLocalVarName();
+        String res = nameGenerator.generateLocalVarName();
         out.emit("    " + res + " = xor i1 " + r1.getResultVarNameOrConstant() + ", 1\n");  // xor with 1 is "not"
 
         return new ExtendedVisitorReturnInfo(MiniJavaType.BOOLEAN, res);

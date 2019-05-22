@@ -3,6 +3,7 @@ class mytest {
         int i;
         boolean b;
         int[] arr;
+        i = 1;
         System.out.println(i);
         System.out.println(i < (i+1));
     }
@@ -48,7 +49,13 @@ class D extends B {
 
     public boolean checkInheritanceAndArgs(){
         int[] arr;
+        int i;
+        i = 1;
         arr[arr[1]] = (this.afunct(arr, arr))[2];
+        while (0 < i){
+            i = i + 1;
+            arr = arr;
+        }
         return true;
     }
 
