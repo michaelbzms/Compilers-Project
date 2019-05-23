@@ -26,7 +26,6 @@ public class ExtendedVisitorReturnInfo extends VisitorReturnInfo {
         resultVarNameOrConstant = _resultVarName;
     }
 
-
     public String getResultVarNameOrConstant() {
         return resultVarNameOrConstant;
     }

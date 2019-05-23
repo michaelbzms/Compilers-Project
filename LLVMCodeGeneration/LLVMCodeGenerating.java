@@ -7,14 +7,17 @@ import Util.MyPair;
 
 public class LLVMCodeGenerating {
 
-    private static String getMethodType(String className, String methodName, MethodInfo methodInfo){
+    public static String getMethodType(String className, String methodName, MethodInfo methodInfo){
         String sig = methodInfo.getReturnType().getLLVMType();
         int argnum = methodInfo.getNumberOfArguments();
         sig += " (i8*";    // "this" ptr
         for (int i = 0 ; i < argnum ; i++){
             sig += ", " + methodInfo.getArgumentInfoAtPos(i).getType().getLLVMType();
         }
-        sig += ")* @" + className + "." + methodName;
+        sig += ")*";
+        if (className != null && methodName != null) {
+            sig += " @" + className + "." + methodName;
+        }
         return sig;
     }
 
@@ -28,10 +31,12 @@ public class LLVMCodeGenerating {
         ClassInfo currClass = classInfo;
         while (currClass != null){
             String addon = "";
+            boolean first = true;
             for (MyPair<String, MethodInfo> m : currClass.getOrderedMethods()){
                 if (!m.getSecond().isOverride() && !m.getFirst().equals("main")){
-                    addon += "i8* bitcast (" + getMethodType(currClassName, m.getFirst(), m.getSecond()) + " to i8*)";
+                    addon += (first ? "" : ", ") + "i8* bitcast (" + getMethodType(currClassName, m.getFirst(), m.getSecond()) + " to i8*)";
                 }
+                first = false;
             }
             if (!addon.equals("")) allMethodsOrdered = addon + (allMethodsOrdered.equals("") ? "" : ", ") + allMethodsOrdered;   // prepend (!)
             currClassName = currClass.getMotherClassName();

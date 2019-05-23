@@ -1,5 +1,8 @@
 package Util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class VisitorParameterInfo {
     private String name;
     private String supername = null;
@@ -49,5 +52,9 @@ public class VisitorParameterInfo {
 
     public String getClassNameToCall() { return null; }
     public String getMethodNameToCall() { return null; }
+
+    // override use only
+    public List<ExtendedVisitorReturnInfo> getListOfResultVars() { return null; }
+    public void addToListOfResultVars(ExtendedVisitorReturnInfo var){ }
 
 }

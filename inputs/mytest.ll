@@ -46,7 +46,7 @@ define i32* @A.afunct(i8* %this, i32* %a1, i32* %a2) {
     %_6 = load i32*, i32** %a2
     store i32* %_6, i32** %a1
     %_7 = add i32 2, 1
-    %_8 = call i8* @calloc(i32 4, i32 %_7)
+    %_8 = call i8* @calloc(i32 %_7, i32 4)
     store i32 2, i32* %_8
     ret i32* %_8
 }
@@ -65,29 +65,35 @@ define i32 @B.bfunct(i8* %this, i32* %aarr, i32 %i) {
 
 define i32* @C.afunct(i8* %this, i32* %c1, i32* %c2) {
     %res = alloca i32*
+    %a = alloca i8*
     %c1 = alloca i32*
     %c2 = alloca i32*
-    %_0 = load i32*, i32** %c1
-    %_1 = add i32 0, 1
-    %_2 = getelementptr i32, i32* %_0, i32 %_1
-    %_3 = load i32, i32* %_2
-    %_4 = load i32*, i32** %c2
-    %_5 = add i32 1, 1
+    ; This is an object allocation
+    %_1 = call i8* @calloc(i32 1, i32 8)
+    %_2 = bitcast i8* %_1 to i8***
+    %_3 = getelementptr [0 x i8*], [0 x i8*]* @.mytest_vtable, i32 0, i32 0
+    store i8** %_3, i8*** %_2
+    %_4 = load i32*, i32** %c1
+    %_5 = add i32 0, 1
     %_6 = getelementptr i32, i32* %_4, i32 %_5
     %_7 = load i32, i32* %_6
-    %_8 = icmp slt i32 %_3, %_7
-    br i1 %_8, label %label0, label %label1
+    %_8 = load i32*, i32** %c2
+    %_9 = add i32 1, 1
+    %_10 = getelementptr i32, i32* %_8, i32 %_9
+    %_11 = load i32, i32* %_10
+    %_12 = icmp slt i32 %_7, %_11
+    br i1 %_12, label %label0, label %label1
 label0:
-    %_9 = load i32*, i32** %c1
-    store i32* %_9, i32** %res
+    %_13 = load i32*, i32** %c1
+    store i32* %_13, i32** %res
     br label %label2
 label1:
-    %_10 = load i32*, i32** %c2
-    store i32* %_10, i32** %res
+    %_14 = load i32*, i32** %c2
+    store i32* %_14, i32** %res
     br label %label2
 label2:
-    %_11 = load i32*, i32** %res
-    ret i32* %_11
+    %_15 = load i32*, i32** %res
+    ret i32* %_15
 }
 
 define i1 @D.checkInheritanceAndArgs(i8* %this) {

@@ -34,6 +34,8 @@ class C extends B {
 
     public int[] afunct(int[] c1, int[] c2){
         int[] res;
+        mytest a;
+        a = new mytest();
         if ((c1[0]) < (c2[1])){
             res = c1;
         } else {

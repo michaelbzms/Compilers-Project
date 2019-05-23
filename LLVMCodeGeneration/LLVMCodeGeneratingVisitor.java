@@ -4,6 +4,7 @@ import java.util.Map;
 import MiniJavaType.*;
 import SemanticAnalysis.SemanticChecks;
 import SymbolTable.*;
+import Util.ExtendedVisitorParameterInfo;
 import Util.ExtendedVisitorReturnInfo;
 import Util.MyPair;
 import Util.VisitorParameterInfo;
@@ -88,6 +89,11 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
     public ExtendedVisitorReturnInfo visit(MainClass n, VisitorParameterInfo argu) {
 
         out.emit("define i32 @main() {\n");
+
+        // allocate space for local main variables
+        for ( Map.Entry<String, VariableInfo> v : ST.getMainClassInfo().getMethodInfo("main").getVariablesMap().entrySet() ){
+            out.emit("    %" + v.getKey() + " = alloca " + v.getValue().getType().getLLVMType() + "\n");
+        }
 
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
@@ -201,10 +207,6 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
 
         out.emit(") {\n");
 
-        // allocate stack space for args in correct order //TODO: Do not do this if I use the following loop to allocate space for both local and arguments
-        //for ( MyPair<String, VariableInfo> v : methodInfo.getArgList() ){
-        //	out.emit("    %" + v.getFirst() + " = alloca " + v.getSecond().getType().getLLVMType() + "\n");
-        //}
 
         // allocate space for arguments and local variables alike (order does not matter since we use these variables to store/load from/to them, right? TODO)
         for ( Map.Entry<String, VariableInfo> v : methodInfo.getVariablesMap().entrySet() ){
@@ -582,6 +584,8 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         out.emit("    " + elemptr + " = getelementptr i32, i32* " + r0.getResultVarNameOrConstant() + ", i32 " + offsetplusone + "\n");
         out.emit("    " + element + " = load i32, i32* " + elemptr + "\n");
 
+        //TODO: check index >= 0 and < len => check unsigned < len
+
         return new ExtendedVisitorReturnInfo(MiniJavaType.INTEGER, element);
     }
 
@@ -610,14 +614,38 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      */
     public ExtendedVisitorReturnInfo visit(MessageSend n, VisitorParameterInfo argu) {
         //TODO: Method Call
-        ExtendedVisitorReturnInfo _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, new VisitorParameterInfo(argu.getName(), argu.getSupername(), argu.getType(), null));  // null purpose -> only get name
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
-        return _ret;
+        ExtendedVisitorReturnInfo r0 = n.f0.accept(this, argu);
+        ExtendedVisitorReturnInfo r2 = n.f2.accept(this, new VisitorParameterInfo(argu.getName(), argu.getSupername(), argu.getType(), null));  // null purpose -> only get name
+        if (r0 == null || r2 == null) return null;
+
+        MethodInfo methodInfo = SemanticChecks.checkMethodExistsForCustomType(ST, r0.getType().getCustomTypeName(), r2.getName());
+        if (methodInfo == null) { System.err.println("Missed something in semantic checks"); return null; }  // should not happen
+
+        String vtableptr = nameGenerator.generateLocalVarName();
+        String func_ptr = nameGenerator.generateLocalVarName();
+        String func_addr = nameGenerator.generateLocalVarName();
+        String casted_func = nameGenerator.generateLocalVarName();
+        String ret = nameGenerator.generateLocalVarName();
+        String obj = r2.getResultVarNameOrConstant();
+        int methodIndex = methodInfo.getOffset() / 8;
+
+        out.emit("    ; Method call\n");
+        ExtendedVisitorParameterInfo exprListArgs = new ExtendedVisitorParameterInfo(argu.getSupername(), argu.getName(), r0.getType().getCustomTypeName(), r2.getName(), argu.getType());
+        n.f4.accept(this, exprListArgs);   // this will emit code to calculate the parameters
+
+        out.emit("    " + vtableptr + " = bitcast i8* " + obj + " to i8**\n");
+        out.emit("    " + func_ptr + " = getelementptr i8*, i8** " + vtableptr + ", i32 " + methodIndex + "\n");
+        out.emit("    " + func_addr + " = load i8*, i8** " + func_ptr + "\n");
+        out.emit("    " + casted_func + " = bitcast i8* " + func_addr + " to " + LLVMCodeGenerating.getMethodType(null, null, methodInfo) + "\n");
+        out.emit("    " + ret + " = call " + methodInfo.getReturnType().getLLVMType() + " " + casted_func + "(i8* " + obj);
+        if (exprListArgs.getListOfResultVars() != null) {
+            for (ExtendedVisitorReturnInfo r : exprListArgs.getListOfResultVars()) {
+                out.emit(", " + r.getType().getLLVMType() + " " + r.getResultVarNameOrConstant());
+            }
+        }
+        out.emit(")\n");
+
+        return null;
     }
 
     /**
@@ -625,10 +653,11 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      * f1 -> ExpressionTail()
      */
     public ExtendedVisitorReturnInfo visit(ExpressionList n, VisitorParameterInfo argu) {
-        ExtendedVisitorReturnInfo _ret=null;
-        n.f0.accept(this, argu);
+        ExtendedVisitorReturnInfo r0 = n.f0.accept(this, argu);      // emits code to calculate expre
         n.f1.accept(this, argu);
-        return _ret;
+        if (r0 == null) return null;
+        argu.addToListOfResultVars(r0);
+        return null;
     }
 
     /**
@@ -643,10 +672,11 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      * f1 -> Expression()
      */
     public ExtendedVisitorReturnInfo visit(ExpressionTerm n, VisitorParameterInfo argu) {
-        ExtendedVisitorReturnInfo _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        return _ret;
+        // calculate expressions (emit such code)
+        ExtendedVisitorReturnInfo r1 = n.f1.accept(this, argu);   // emits code to calculate expre
+        if (r1 == null) return null;
+        argu.addToListOfResultVars(r1);
+        return null;
     }
 
     /**
@@ -720,7 +750,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
                 } else System.err.println("Unknown identifier in expression?!");  // should not happen cause of semantic checks
             }
 
-            return new ExtendedVisitorReturnInfo(n.f0.toString(), null, n.f0.beginLine, value);
+            return new ExtendedVisitorReturnInfo(n.f0.toString(), (varInfo != null) ? varInfo.getType() : null, n.f0.beginLine, value);
         }
         else
             return new ExtendedVisitorReturnInfo(n.f0.toString(), null, n.f0.beginLine, "%" + n.f0.toString());  // in case we want an LLVM variable (this would be a pointer not the value!)
@@ -747,9 +777,11 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         String lenplusone = nameGenerator.generateLocalVarName();
         String arr = nameGenerator.generateLocalVarName();
         out.emit("    " + lenplusone + " = add i32 " + r3.getResultVarNameOrConstant() + ", 1\n");
-        out.emit("    " + arr + " = call i8* @calloc(i32 4, i32 " + lenplusone + ")\n");
+        out.emit("    " + arr + " = call i8* @calloc(i32 " + lenplusone + ", i32 4)\n");
         // (!) Store length of array at its first element - real elements start from 1... (REMEMBER)
         out.emit("    store i32 " + r3.getResultVarNameOrConstant() + ", i32* " + arr + "\n");
+
+        //TODO check len >= 0
 
         ExtendedVisitorReturnInfo res = new ExtendedVisitorReturnInfo(MiniJavaType.INTARRAY, arr);
         res.setAlloced(true);
@@ -764,12 +796,23 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      */
     public ExtendedVisitorReturnInfo visit(AllocationExpression n, VisitorParameterInfo argu) {
         // TODO: Object allocation
-        ExtendedVisitorReturnInfo _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        return _ret;
+        ExtendedVisitorReturnInfo r1 = n.f1.accept(this, new VisitorParameterInfo(argu.getName(), argu.getSupername(), argu.getType(), null));  // do not ask for a variable we only want the class name
+        if (r1 == null) return null;
+
+        ClassInfo classInfo = ST.lookupClass(r1.getName());
+        if (classInfo == null) { System.err.println("Unknown class allocation"); return null; } // should not happen
+
+        String newobj = nameGenerator.generateLocalVarName();
+        String vtableptr = nameGenerator.generateLocalVarName();
+        String vtablefirstelem = nameGenerator.generateLocalVarName();
+        int numOfMethods = classInfo.getTotalNumberOfMethods();
+        out.emit("    ; This is an object allocation of \"" + r1.getName() + "\"\n");
+        out.emit("    " + newobj + " = call i8* @calloc(i32 1, i32 " + (classInfo.getNextFieldOffset() + 8) + ")\n");
+        out.emit("    " + vtableptr + " = bitcast i8* " + newobj + " to i8***\n");
+        out.emit("    " + vtablefirstelem + " = getelementptr [" + numOfMethods + " x i8*], [" + numOfMethods + " x i8*]* @." + r1.getName() + "_vtable, i32 0, i32 0\n");
+        out.emit("    store i8** " + vtablefirstelem + ", i8*** " + vtableptr + "\n");
+
+        return new ExtendedVisitorReturnInfo(r1.getName(), new MiniJavaType(TypeEnum.CUSTOM, r1.getName()), newobj);
     }
 
     /**
