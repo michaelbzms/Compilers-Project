@@ -626,7 +626,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         String func_addr = nameGenerator.generateLocalVarName();
         String casted_func = nameGenerator.generateLocalVarName();
         String ret = nameGenerator.generateLocalVarName();
-        String obj = r2.getResultVarNameOrConstant();
+        String obj = r0.getResultVarNameOrConstant();
         int methodIndex = methodInfo.getOffset() / 8;
 
         out.emit("    ; Method call\n");
@@ -645,7 +645,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         }
         out.emit(")\n");
 
-        return null;
+        return new ExtendedVisitorReturnInfo(methodInfo.getReturnType(), ret);
     }
 
     /**

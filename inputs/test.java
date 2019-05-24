@@ -3,6 +3,7 @@ class mytest {
         Point s;
         Point n;
         int sum;
+        s = new Point();
         n = s.getNew(1, 2);
         sum = n.sum();
     }
