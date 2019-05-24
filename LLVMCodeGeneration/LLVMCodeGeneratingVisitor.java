@@ -471,7 +471,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
             out.emit("    call void (i32) @print_int(i32 " + r2.getResultVarNameOrConstant() + ")\n");
         } else if (r2.getType().getTypeEnum() == TypeEnum.BOOLEAN){
             String casted = nameGenerator.generateLocalVarName();
-            out.emit("    " + casted + " = bitcast i1 " + r2.getResultVarNameOrConstant() + " to i32\n");
+            out.emit("    " + casted + " = zext i1 " + r2.getResultVarNameOrConstant() + " to i32\n");
             out.emit("    call void (i32) @print_int(i32 " + casted + ")\n");
         }
 
@@ -632,19 +632,23 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         MethodInfo methodInfo = SemanticChecks.checkMethodExistsForCustomType(ST, r0.getType().getCustomTypeName(), r2.getName());
         if (methodInfo == null) { System.err.println("Missed something in semantic checks"); return null; }  // should not happen
 
+        String vtableptrptr = nameGenerator.generateLocalVarName();
         String vtableptr = nameGenerator.generateLocalVarName();
         String func_ptr = nameGenerator.generateLocalVarName();
         String func_addr = nameGenerator.generateLocalVarName();
         String casted_func = nameGenerator.generateLocalVarName();
         String ret = nameGenerator.generateLocalVarName();
         String obj = r0.getResultVarNameOrConstant();
+
+        //TODO: check this
         int methodIndex = methodInfo.getOffset() / 8;
 
         out.emit("    ; Method call\n");
         ExtendedVisitorParameterInfo exprListArgs = new ExtendedVisitorParameterInfo(argu.getSupername(), argu.getName(), r0.getType().getCustomTypeName(), r2.getName(), argu.getType());
         n.f4.accept(this, exprListArgs);   // this will emit code to calculate the parameters
 
-        out.emit("    " + vtableptr + " = bitcast i8* " + obj + " to i8**\n");
+        out.emit("    " + vtableptrptr + " = bitcast i8* " + obj + " to i8***\n");
+        out.emit("    " + vtableptr + " = load i8**, i8*** " + vtableptrptr + "\n");
         out.emit("    " + func_ptr + " = getelementptr i8*, i8** " + vtableptr + ", i32 " + methodIndex + "\n");
         out.emit("    " + func_addr + " = load i8*, i8** " + func_ptr + "\n");
         out.emit("    " + casted_func + " = bitcast i8* " + func_addr + " to " + LLVMCodeGenerating.getMethodType(null, null, methodInfo) + "\n");
@@ -794,7 +798,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         String lenplusone = nameGenerator.generateLocalVarName();
         String arr = nameGenerator.generateLocalVarName();
         out.emit("    " + lenplusone + " = add i32 " + r3.getResultVarNameOrConstant() + ", 1\n");
-        out.emit("    " + arr + " = call i8* @calloc(i32 " + lenplusone + ", i32 4)\n");
+        out.emit("    " + arr + " = call i8* @calloc(i32 4, i32 " + lenplusone + ")\n");
         // (!) Store length of array at its first element - real elements start from 1... (REMEMBER)
         out.emit("    store i32 " + r3.getResultVarNameOrConstant() + ", i32* " + arr + "\n");
 
@@ -824,7 +828,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         String vtablefirstelem = nameGenerator.generateLocalVarName();
         int numOfMethods = classInfo.getTotalNumberOfMethods();
         out.emit("    ; This is an object allocation of \"" + r1.getName() + "\"\n");
-        out.emit("    " + newobj + " = call i8* @calloc(i32 1, i32 " + (classInfo.getNextFieldOffset() + 8) + ")\n");
+        out.emit("    " + newobj + " = call i8* @calloc(i32 " + (classInfo.getNextFieldOffset() + 8) + ", i32 1)\n");
         out.emit("    " + vtableptr + " = bitcast i8* " + newobj + " to i8***\n");
         out.emit("    " + vtablefirstelem + " = getelementptr [" + numOfMethods + " x i8*], [" + numOfMethods + " x i8*]* @." + r1.getName() + "_vtable, i32 0, i32 0\n");
         out.emit("    store i8** " + vtablefirstelem + ", i8*** " + vtableptr + "\n");
