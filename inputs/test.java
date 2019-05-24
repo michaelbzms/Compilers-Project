@@ -6,6 +6,7 @@ class mytest {
         s = new Point();
         n = s.getNew(1, 2);
         sum = n.sum();
+        System.out.println(sum);
     }
 }
 

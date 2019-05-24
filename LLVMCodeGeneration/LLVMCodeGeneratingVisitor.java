@@ -43,13 +43,12 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
                 "declare void @exit(i32)\n" +
                 "\n" +
                 "@_cint = constant [4 x i8] c\"%d\\0a\\00\"\n" +
-                "@_cOOB = constant [15 x i8] c\"Out of bounds\\0a\\00\"\n" +
+                "@_cOOB = constant [15 x i8] c\"Out of bounds\\0a\\00\"\n\n" +
                 "define void @print_int(i32 %i) {\n" +
                 "    %_str = bitcast [4 x i8]* @_cint to i8*\n" +
                 "    call i32 (i8*, ...) @printf(i8* %_str, i32 %i)\n" +
                 "    ret void\n" +
-                "}\n" +
-                "\n" +
+                "}\n\n" +
                 "define void @throw_oob() {\n" +
                 "    %_str = bitcast [15 x i8]* @_cOOB to i8*\n" +
                 "    call i32 (i8*, ...) @printf(i8* %_str)\n" +
@@ -203,7 +202,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
 
         out.emit("define " + methodInfo.getReturnType().getLLVMType() + " @" + argu.getName() + "." + r2.getName() + "(i8* %this");
 
-        n.f4.accept(this, new VisitorParameterInfo(r2.getName(), argu.getName(), "method"));
+        n.f4.accept(this, new VisitorParameterInfo(r2.getName(), argu.getName(), "method"));   // emits parameter code
 
         out.emit(") {\n");
 
@@ -213,6 +212,11 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         	out.emit("    %" + v.getKey() + " = alloca " + v.getValue().getType().getLLVMType() + "\n");
         }
 
+        // argument values must be stored from call args
+        for ( MyPair<String, VariableInfo> v : methodInfo.getArgList() ){
+        	out.emit("    store " + v.getSecond().getType().getLLVMType() + " %." + v.getFirst() + ", " + v.getSecond().getType().getLLVMType() + "* %" + v.getFirst() + "\n");
+        }
+
         //n.f7.accept(this, new VisitorParameterInfo(r2.getName(), argu.getName(), "method"));
         n.f8.accept(this, new VisitorParameterInfo(r2.getName(), argu.getName(), "method"));
 
@@ -220,11 +224,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r10 = n.f10.accept(this, new VisitorParameterInfo(r2.getName(), argu.getName(), "method"));
         if (r10 == null) return null;
 
-        // hardcoded for now: (TODO: fix return of Expression)
-        if (r10.getResultVarNameOrConstant() == null && methodInfo.getNumberOfArguments() > 0)
-        	r10.setResultVarNameOrConstant("%" + methodInfo.getArgList().get(0).getFirst());
-
-        // TODO: what if return type is an object? -> we have to return a reference
+        // Note: what if return type is an object? -> we have to return a reference
         out.emit("    ret " + methodInfo.getReturnType().getLLVMType() + " " + r10.getResultVarNameOrConstant() + "\n");
 
         out.emit("}\n\n");
@@ -252,7 +252,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r1 = n.f1.accept(this, argu);
         if (r0 == null || r1 == null) return null;
 
-        out.emit(", " + r0.getType().getLLVMType() + " %" + r1.getName());
+        out.emit(", " + r0.getType().getLLVMType() + " %." + r1.getName());
 
         return null;
     }
@@ -361,10 +361,16 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
             // (IT COULD ALSO BE A FIELD OF A SUPERCLASS!)
             varInfo = SemanticChecks.checkFieldExists(ST, argu.getSupername(), argu.getName(), r0.getName());
             if (varInfo != null){
-                // identifier is a field of "this" object
-                //TODO: implement once I implement object allocation
+                // identifier is a field of "this" object TODO: check
+                String llvmType = varInfo.getType().getLLVMType();
+                int byteoffset = 8 + varInfo.getOffset();   // + 8 to bypass the vtable pointer
+                String fieldptr = nameGenerator.generateLocalVarName();
+                String castedfieldptr = nameGenerator.generateLocalVarName();
+                out.emit("    " + fieldptr + " = getelementptr i8, i8* %this, i32 " + byteoffset + "\n");
+                out.emit("    " + castedfieldptr + " = bitcast i8* " + fieldptr + " to " + llvmType + "*\n");
+                out.emit("    store " + llvmType + " " + r2.getResultVarNameOrConstant() + ", " + llvmType + "* " + castedfieldptr + "\n");
             } else System.err.println("Unknown identifier in assignment?!");  // should not happen cause of semantic checks
-        }
+        } else System.err.println("Unknown identifier in assignment?!");      // ^^
 
         return null;
     }
@@ -458,13 +464,18 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      * f4 -> ";"
      */
     public ExtendedVisitorReturnInfo visit(PrintStatement n, VisitorParameterInfo argu) {
-        ExtendedVisitorReturnInfo _ret=null;
-        n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
-        n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        return _ret;
+        ExtendedVisitorReturnInfo r2 = n.f2.accept(this, argu);
+        if (r2 == null) return null;
+
+        if (r2.getType().getTypeEnum() == TypeEnum.INTEGER) {
+            out.emit("    call void (i32) @print_int(i32 " + r2.getResultVarNameOrConstant() + ")\n");
+        } else if (r2.getType().getTypeEnum() == TypeEnum.BOOLEAN){
+            String casted = nameGenerator.generateLocalVarName();
+            out.emit("    " + casted + " = bitcast i1 " + r2.getResultVarNameOrConstant() + " to i32\n");
+            out.emit("    call void (i32) @print_int(i32 " + casted + ")\n");
+        }
+
+        return null;
     }
 
     /**
@@ -745,10 +756,16 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
                 // (IT COULD ALSO BE A FIELD OF A SUPERCLASS!)
                 varInfo = SemanticChecks.checkFieldExists(ST, argu.getSupername(), argu.getName(), n.f0.toString());
                 if (varInfo != null){
-                    // identifier is a field of "this" object
-                    //TODO: implement once I implement object allocation
+                    // identifier is a field of "this" object TODO: Check
+                    String llvmType = varInfo.getType().getLLVMType();
+                    int byteoffset = 8 + varInfo.getOffset();   // + 8 to bypass the vtable pointer
+                    String fieldptr = nameGenerator.generateLocalVarName();
+                    String castedfieldptr = nameGenerator.generateLocalVarName();
+                    out.emit("    " + fieldptr + " = getelementptr i8, i8* %this, i32 " + byteoffset + "\n");
+                    out.emit("    " + castedfieldptr + " = bitcast i8* " + fieldptr + " to " + llvmType + "*\n");
+                    out.emit("    " + value + " = load " + llvmType + ", " + llvmType + "* " + castedfieldptr + "\n");
                 } else System.err.println("Unknown identifier in expression?!");  // should not happen cause of semantic checks
-            }
+            } else System.err.println("Unknown identifier in expression?!");      // ^^
 
             return new ExtendedVisitorReturnInfo(n.f0.toString(), (varInfo != null) ? varInfo.getType() : null, n.f0.beginLine, value);
         }
