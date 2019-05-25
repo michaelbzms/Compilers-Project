@@ -3,7 +3,7 @@ class mytest {
         int i;
         boolean b;
         int[] arr;
-        i = 1;
+        i = 2;
         System.out.println(i);
         System.out.println(i < (i+1));
     }

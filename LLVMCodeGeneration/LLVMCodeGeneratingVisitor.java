@@ -347,6 +347,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r0 == null || r2 == null) return null;
 
+        out.emit("    ; assignment\n");
         VariableInfo varInfo;
         if (argu.getType().equals("main")) {
             varInfo = ST.lookupMainVariable(r0.getName());
@@ -390,10 +391,15 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r5 = n.f5.accept(this, argu);
         if (r0 == null || r2 == null || r5 == null) return null;
 
+        //TODO: check index bounds
+
         String offsetplusone = nameGenerator.generateLocalVarName();
+        String array = nameGenerator.generateLocalVarName();
         String elemptr = nameGenerator.generateLocalVarName();
+        out.emit("    ; Array assignment\n");
         out.emit("    " + offsetplusone + " = add i32 " + r2.getResultVarNameOrConstant() + ", 1\n");   // negate length in 0 pos
-        out.emit("    " + elemptr + " = getelementptr i32, i32* " + r0.getResultVarNameOrConstant() + ", i32 " + offsetplusone + "\n");
+        out.emit("    " + array + " = load i32*, i32** " + r0.getResultVarNameOrConstant() + "\n");   // negate length in 0 pos
+        out.emit("    " + elemptr + " = getelementptr i32, i32* " + array + ", i32 " + offsetplusone + "\n");
         out.emit("    store i32 " + r5.getResultVarNameOrConstant() + ", i32* " + elemptr + "\n");
 
         return null;
@@ -797,14 +803,16 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
 
         String lenplusone = nameGenerator.generateLocalVarName();
         String arr = nameGenerator.generateLocalVarName();
+        String castedarr = nameGenerator.generateLocalVarName();
         out.emit("    " + lenplusone + " = add i32 " + r3.getResultVarNameOrConstant() + ", 1\n");
         out.emit("    " + arr + " = call i8* @calloc(i32 4, i32 " + lenplusone + ")\n");
+        out.emit("    " + castedarr + " = bitcast i8* " + arr + " to i32*\n");
         // (!) Store length of array at its first element - real elements start from 1... (REMEMBER)
-        out.emit("    store i32 " + r3.getResultVarNameOrConstant() + ", i32* " + arr + "\n");
+        out.emit("    store i32 " + r3.getResultVarNameOrConstant() + ", i32* " + castedarr + "\n");
 
         //TODO check len >= 0
 
-        ExtendedVisitorReturnInfo res = new ExtendedVisitorReturnInfo(MiniJavaType.INTARRAY, arr);
+        ExtendedVisitorReturnInfo res = new ExtendedVisitorReturnInfo(MiniJavaType.INTARRAY, castedarr);
         res.setAlloced(true);
         return res;
     }

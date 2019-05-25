@@ -2,11 +2,21 @@ class mytest {
     public static void main(String[] illegal){
         Point s;
         Point n;
+        int[] arr;
+        int i;
         int sum;
         s = new Point();
         n = s.getNew(1, 2);
         sum = n.sum();
         System.out.println(sum);
+        ////////////////////////
+        arr = new int[sum];
+        i = 0;
+        while (i < (arr.length)){
+            arr[i] = i + 1;
+            System.out.println(arr[i]);
+            i = i + 1;
+        }
     }
 }
 
