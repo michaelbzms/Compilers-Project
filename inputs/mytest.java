@@ -1,11 +1,17 @@
 class mytest {
     public static void main(String[] illegal){
-        int i;
-        boolean b;
+        boolean bull;
+        B b;
+        D d;
         int[] arr;
-        i = 2;
-        System.out.println(i);
-        System.out.println(i < (i+1));
+        arr = new int[102];
+        b = new C();
+        d = new D();
+        arr = b.afunct(arr, arr);  // should print 102 cuz virtual
+        arr = d.afunct(arr, arr);  // should print 42 cuz inhertitance
+        b = new B();
+        arr = b.afunct(arr, arr);  // should print 42
+        bull = d.checkInheritanceAndArgs();
     }
 }
 
@@ -15,6 +21,7 @@ class A extends mytest {
     public int[] afunct(int[] a1, int[] a2){
         a2[0] = a1[1];
         a1 = a2;
+        System.out.println(42);
         return new int[2];
     }
 
@@ -35,6 +42,7 @@ class C extends B {
     public int[] afunct(int[] c1, int[] c2){
         int[] res;
         mytest a;
+        System.out.println(102);
         a = new mytest();
         if ((c1[0]) < (c2[1])){
             res = c1;
@@ -50,14 +58,14 @@ class D extends B {
     int[] Dfield;
 
     public boolean checkInheritanceAndArgs(){
-        int[] arr;
+        int[] array;
         int i;
         i = 1;
-        arr[arr[1]] = (this.afunct(arr, arr))[2];
-        while (0 < i){
-            i = i + 1;
-            arr = arr;
-        }
+        array[0] = 4;
+        System.out.println(array[0]);
+        System.out.println(array[1]);
+        System.out.println(array.length);
+        //array[array[1]] = (this.afunct(array, array))[1];
         return true;
     }
 

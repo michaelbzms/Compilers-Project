@@ -17,6 +17,12 @@ class mytest {
             System.out.println(arr[i]);
             i = i + 1;
         }
+        ////////////////////////
+        if (!!!false){
+            System.out.println(true);
+        } else {
+            System.out.println(false);
+        }
     }
 }
 

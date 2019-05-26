@@ -210,6 +210,10 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         // allocate space for arguments and local variables alike (order does not matter since we use these variables to store/load from/to them, right? TODO)
         for ( Map.Entry<String, VariableInfo> v : methodInfo.getVariablesMap().entrySet() ){
         	out.emit("    %" + v.getKey() + " = alloca " + v.getValue().getType().getLLVMType() + "\n");
+            if (v.getValue().getType().getTypeEnum() == TypeEnum.CUSTOM || v.getValue().getType().getTypeEnum() == TypeEnum.INTARRAY){
+                // If reference init with null to ensure seg fault
+                //out.emit("    store " + v.getValue().getType().getLLVMType() + " 0, " + v.getValue().getType().getLLVMType() + "* %" +  v.getKey() + "\n");
+            }
         }
 
         // argument values must be stored from call args
@@ -417,7 +421,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
 
 
         // check index bounds
-        out.emit("     ; array assignment\n");
+        out.emit("    ; array assignment\n");
         String exceptionlabel = nameGenerator.generateLabelName();
         String oklabel = nameGenerator.generateLabelName();
         String exitlabel = nameGenerator.generateLabelName();
@@ -860,17 +864,19 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
 
         // check len >= 0
         out.emit("     ; array allocation\n");
-        String exceptionlabel = nameGenerator.generateLabelName();
-        String oklabel = nameGenerator.generateLabelName();
-        String exitlabel = nameGenerator.generateLabelName();
 
-        String comp = nameGenerator.generateLocalVarName();
-        out.emit("    " + comp + " = icmp slt i32 -1, " + r3.getResultVarNameOrConstant() + "\n");
-        out.emit("    br i1 " + comp + ", label %" + oklabel + ", label %" + exceptionlabel + "\n");
-        out.emit(exceptionlabel + ":\n");
-        out.emit("    call void @throw_oob()\n");
-        out.emit("    br label %" + exitlabel + "\n");
-        out.emit(oklabel + ":\n");
+        //TODO: remove commented code? We are supposed to let it seg fault by itself
+        //String exceptionlabel = nameGenerator.generateLabelName();
+        //String oklabel = nameGenerator.generateLabelName();
+        //String exitlabel = nameGenerator.generateLabelName();
+
+        //String comp = nameGenerator.generateLocalVarName();
+        //out.emit("    " + comp + " = icmp slt i32 -1, " + r3.getResultVarNameOrConstant() + "\n");
+        //out.emit("    br i1 " + comp + ", label %" + oklabel + ", label %" + exceptionlabel + "\n");
+        //out.emit(exceptionlabel + ":\n");
+        //out.emit("    call void @throw_oob()\n");
+        //out.emit("    br label %" + exitlabel + "\n");
+        //out.emit(oklabel + ":\n");
 
         String lenplusone = nameGenerator.generateLocalVarName();
         String arr = nameGenerator.generateLocalVarName();
@@ -878,13 +884,11 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         out.emit("    " + lenplusone + " = add i32 " + r3.getResultVarNameOrConstant() + ", 1\n");
         out.emit("    " + arr + " = call i8* @calloc(i32 4, i32 " + lenplusone + ")\n");
         out.emit("    " + castedarr + " = bitcast i8* " + arr + " to i32*\n");
-        // (!) Store length of array at its first element - real elements start from 1... (REMEMBER)
+        // (!) Store length of array at its first element - real elements start from 1...
         out.emit("    store i32 " + r3.getResultVarNameOrConstant() + ", i32* " + castedarr + "\n");
 
-        out.emit("    br label %" + exitlabel + "\n");
-        out.emit(exitlabel + ":\n");
-
-
+        //out.emit("    br label %" + exitlabel + "\n");
+        //out.emit(exitlabel + ":\n");
 
         ExtendedVisitorReturnInfo res = new ExtendedVisitorReturnInfo(MiniJavaType.INTARRAY, castedarr);
         res.setAlloced(true);

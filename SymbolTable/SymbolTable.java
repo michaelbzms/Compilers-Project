@@ -220,14 +220,14 @@ public class SymbolTable {
 			}
 			// calculate offsets for fields
 			for (MyPair<String, VariableInfo> f : c.getSecond().getOrderedFields()){
-				System.out.println(c.getFirst() + "." + f.getFirst() + " : " + (startingFieldOffset));
+				//System.out.println(c.getFirst() + "." + f.getFirst() + " : " + (startingFieldOffset));
 				f.getSecond().setOffset(startingFieldOffset);   // (!) must be same object (2 references) as in the map TODO: check
 				startingFieldOffset += f.getSecond().getType().getOffsetOfType();
 			}
 			// calculate offsets for methods
 			for (MyPair<String, MethodInfo> m : c.getSecond().getOrderedMethods()){
 				if (!m.getSecond().isOverride()) {              // if method is a new one and not an @override
-					System.out.println(c.getFirst() + "." + m.getFirst() + " : " + (startingMethodOffset));
+					//System.out.println(c.getFirst() + "." + m.getFirst() + " : " + (startingMethodOffset));
 					m.getSecond().setOffset(startingMethodOffset);
 					startingMethodOffset += 8;
 				} else {
