@@ -60,9 +60,11 @@ class D extends B {
     public boolean checkInheritanceAndArgs(){
         int[] arr;
         int i;
-        System.out.println(69);
+        int len;
+        len = 50 - 100;
+        System.out.println(len);
         i = 1;
-        arr = new int[2];
+        arr = new int[2];  // len should give a negative array length error
         arr[0] = 1;
         arr[1] = 0;
         System.out.println(arr.length);

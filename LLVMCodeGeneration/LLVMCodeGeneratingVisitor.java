@@ -44,6 +44,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
                 "\n" +
                 "@_cint = constant [4 x i8] c\"%d\\0a\\00\"\n" +
                 "@_cOOB = constant [15 x i8] c\"Out of bounds\\0a\\00\"\n\n" +
+                "@_cNAL = constant [23 x i8] c\"Negative array length\\0a\\00\"\n\n" +
                 "define void @print_int(i32 %i) {\n" +
                 "    %_str = bitcast [4 x i8]* @_cint to i8*\n" +
                 "    call i32 (i8*, ...) @printf(i8* %_str, i32 %i)\n" +
@@ -51,6 +52,12 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
                 "}\n\n" +
                 "define void @throw_oob() {\n" +
                 "    %_str = bitcast [15 x i8]* @_cOOB to i8*\n" +
+                "    call i32 (i8*, ...) @printf(i8* %_str)\n" +
+                "    call void @exit(i32 1)\n" +
+                "    ret void\n" +
+                "}\n\n" +
+                "define void @throw_nal() {\n" +
+                "    %_str = bitcast [23 x i8]* @_cNAL to i8*\n" +
                 "    call i32 (i8*, ...) @printf(i8* %_str)\n" +
                 "    call void @exit(i32 1)\n" +
                 "    ret void\n" +
@@ -157,20 +164,6 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         if (r1 == null) return null;
         n.f5.accept(this, new VisitorParameterInfo(r1.getName(), "method"));
         n.f6.accept(this, new VisitorParameterInfo(r1.getName(), "method"));
-        return null;
-    }
-
-    /**
-     * f0 -> Type()
-     * f1 -> Identifier()
-     * f2 -> ";"
-     */
-    public ExtendedVisitorReturnInfo visit(VarDeclaration n, VisitorParameterInfo argu) {
-        //ExtendedVisitorReturnInfo r0 = n.f0.accept(this, argu);
-        //ExtendedVisitorReturnInfo r1 = n.f1.accept(this, argu);
-        //if (r0 == null || r1 == null) return null;
-        //out.emit("    %" + r1.getName() + " = alloca " + r0.getType().getLLVMType() + "\n");
-    	// this doesnt really work because it also is used on field declarations
         return null;
     }
 
@@ -872,21 +865,20 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r3 = n.f3.accept(this, argu);
         if (r3 == null) return null;
 
-        // check len >= 0
         out.emit("     ; array allocation\n");
 
-        //TODO: remove commented code? We are supposed to let it seg fault by itself
-        //String exceptionlabel = nameGenerator.generateLabelName();
-        //String oklabel = nameGenerator.generateLabelName();
-        //String exitlabel = nameGenerator.generateLabelName();
+        // check len >= 0
+        String exceptionlabel = nameGenerator.generateLabelName();
+        String oklabel = nameGenerator.generateLabelName();
+        String exitlabel = nameGenerator.generateLabelName();
 
-        //String comp = nameGenerator.generateLocalVarName();
-        //out.emit("    " + comp + " = icmp slt i32 -1, " + r3.getResultVarNameOrConstant() + "\n");
-        //out.emit("    br i1 " + comp + ", label %" + oklabel + ", label %" + exceptionlabel + "\n");
-        //out.emit(exceptionlabel + ":\n");
-        //out.emit("    call void @throw_oob()\n");
-        //out.emit("    br label %" + exitlabel + "\n");
-        //out.emit(oklabel + ":\n");
+        String comp = nameGenerator.generateLocalVarName();
+        out.emit("    " + comp + " = icmp sge i32 " + r3.getResultVarNameOrConstant() + ", 0\n");
+        out.emit("    br i1 " + comp + ", label %" + oklabel + ", label %" + exceptionlabel + "\n");
+        out.emit(exceptionlabel + ":\n");
+        out.emit("    call void @throw_nal()\n");
+        out.emit("    br label %" + exitlabel + "\n");
+        out.emit(oklabel + ":\n");
 
         String lenplusone = nameGenerator.generateLocalVarName();
         String arr = nameGenerator.generateLocalVarName();
@@ -897,8 +889,8 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         // (!) Store length of array at its first element - real elements start from 1...
         out.emit("    store i32 " + r3.getResultVarNameOrConstant() + ", i32* " + castedarr + "\n");
 
-        //out.emit("    br label %" + exitlabel + "\n");
-        //out.emit(exitlabel + ":\n");
+        out.emit("    br label %" + exitlabel + "\n");
+        out.emit(exitlabel + ":\n");
 
         ExtendedVisitorReturnInfo res = new ExtendedVisitorReturnInfo(MiniJavaType.INTARRAY, castedarr);
         res.setAlloced(true);
