@@ -550,15 +550,25 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      * f2 -> Clause()
      */
     public ExtendedVisitorReturnInfo visit(AndExpression n, VisitorParameterInfo argu) {
-        ExtendedVisitorReturnInfo r0 = n.f0.accept(this, argu);
-        ExtendedVisitorReturnInfo r2 = n.f2.accept(this, argu);
-        if (r0 == null || r2 == null) return null;
-
-        // TODO: Short-circuiting!
-        // for now:
-
+        String falselabel = nameGenerator.generateLabelName();
+        String truelabel = nameGenerator.generateLabelName();
+        String exitlabel = nameGenerator.generateLabelName();
+        String falseval = nameGenerator.generateLocalVarName();
         String res = nameGenerator.generateLocalVarName();
-        out.emit("    " + res + " = and i1 " + r0.getResultVarNameOrConstant() + ", " + r2.getResultVarNameOrConstant() + "\n");
+
+        out.emit("    ; short-circuiting \"&&\"\n");
+        ExtendedVisitorReturnInfo r0 = n.f0.accept(this, argu);   // emit code to calculate clause
+        if (r0 == null) return null;
+        out.emit("    br i1 " + r0.getResultVarNameOrConstant() + ", label %" + truelabel + ", label %" + falselabel + "\n");
+        out.emit(falselabel + ":\n");
+        out.emit("    " + falseval + " = and i1 0, 0\n");      // llvm does not allow to assign i1 0 directly
+        out.emit("    br label %" + exitlabel + "\n");
+        out.emit(truelabel + ":\n");
+        ExtendedVisitorReturnInfo r2 = n.f2.accept(this, argu);   // emit code to calculate clause
+        if (r2 == null) return null;
+        out.emit("    br label %" + exitlabel + "\n");
+        out.emit(exitlabel + ":\n");
+        out.emit("    " + res + " = phi i1 [" + falseval + ", %" + falselabel + "], [" + r2.getResultVarNameOrConstant() + ", %" + truelabel + "]\n");
 
         return new ExtendedVisitorReturnInfo(MiniJavaType.BOOLEAN, res);
     }

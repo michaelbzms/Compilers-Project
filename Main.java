@@ -41,8 +41,7 @@ class Main {
 
 				System.out.println("[√] Semantic check OK!");
 
-				// Print offsets
-				System.out.println("\nOffsets for given file's classes are: ");
+				// calculate offsets
 				symbolTable.calculateOffsets();
 
 				// Debug:

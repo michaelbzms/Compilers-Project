@@ -58,14 +58,24 @@ class D extends B {
     int[] Dfield;
 
     public boolean checkInheritanceAndArgs(){
-        int[] array;
+        int[] arr;
         int i;
+        System.out.println(69);
         i = 1;
-        array[0] = 4;
-        System.out.println(array[0]);
-        System.out.println(array[1]);
-        System.out.println(array.length);
-        //array[array[1]] = (this.afunct(array, array))[1];
+        arr = new int[2];
+        arr[0] = 1;
+        arr[1] = 0;
+        System.out.println(arr.length);
+        arr[arr[1]] = (this.afunct(arr, arr))[1];
+        while (i < 2){
+            i = i + 1;
+            if (false && (this.checkInheritanceAndArgs())){
+                System.out.println(44);
+            } else {
+                System.out.println(22);
+            }
+            arr = arr;
+        }
         return true;
     }
 
