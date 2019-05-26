@@ -26,23 +26,23 @@ public class LLVMCodeGenerating {
     public static String generateVTableForClass(String className, ClassInfo classInfo){  // (should not be used for main class)
         String out = "@." + className + "_vtable = global ";
         out += "[" + classInfo.getTotalNumberOfMethods() + " x i8*] [";
-        String allMethodsOrdered = "";
         String currClassName = className;
         ClassInfo currClass = classInfo;
+        String[] VTable = new String[classInfo.getTotalNumberOfMethods()];
+        for (int i = 0 ; i < VTable.length ; i++) VTable[i] = null;
         while (currClass != null){
-            String addon = "";
-            boolean first = true;
             for (MyPair<String, MethodInfo> m : currClass.getOrderedMethods()){
-                if (!m.getSecond().isOverride() && !m.getFirst().equals("main")){
-                    addon += (first ? "" : ", ") + "i8* bitcast (" + getMethodType(currClassName, m.getFirst(), m.getSecond()) + " to i8*)";
+                if (VTable[m.getSecond().getOffset() / 8] == null && !m.getFirst().equals("main")){   // if not added before (by an override)
+                    VTable[m.getSecond().getOffset() / 8] = "i8* bitcast (" + getMethodType(currClassName, m.getFirst(), m.getSecond()) + " to i8*)";
                 }
-                first = false;
             }
-            if (!addon.equals("")) allMethodsOrdered = addon + (allMethodsOrdered.equals("") ? "" : ", ") + allMethodsOrdered;   // prepend (!)
             currClassName = currClass.getMotherClassName();
             currClass = currClass.getMotherClass();
         }
-        out += allMethodsOrdered + "]";
+        for (int i = 0 ; i < VTable.length ; i++) {
+            out += ((i > 0) ? ", " : "") + VTable[i];
+        }
+        out += "]";
         return out;
     }
 

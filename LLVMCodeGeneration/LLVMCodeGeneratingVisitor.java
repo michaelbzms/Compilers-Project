@@ -688,6 +688,8 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      * f5 -> ")"
      */
     public ExtendedVisitorReturnInfo visit(MessageSend n, VisitorParameterInfo argu) {
+        out.emit("    ; Method call\n");
+
         ExtendedVisitorReturnInfo r0 = n.f0.accept(this, argu);
         ExtendedVisitorReturnInfo r2 = n.f2.accept(this, new VisitorParameterInfo(argu.getName(), argu.getSupername(), argu.getType(), null));  // null purpose -> only get name
         if (r0 == null || r2 == null) return null;
@@ -705,7 +707,6 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
 
         int methodIndex = methodInfo.getOffset() / 8;
 
-        out.emit("    ; Method call\n");
         ExtendedVisitorParameterInfo exprListArgs = new ExtendedVisitorParameterInfo(argu.getSupername(), argu.getName(), r0.getType().getCustomTypeName(), r2.getName(), argu.getType());
         n.f4.accept(this, exprListArgs);   // this will emit code to calculate the parameters
 

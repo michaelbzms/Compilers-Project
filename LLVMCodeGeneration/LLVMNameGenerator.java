@@ -16,6 +16,7 @@ public class LLVMNameGenerator {
 
     public void resetLocalCounter(){
         var_counter = 0;
+        label_counter = 0;
     }
 
 }
