@@ -10,7 +10,6 @@ declare void @exit(i32)
 
 @_cint = constant [4 x i8] c"%d\0a\00"
 @_cOOB = constant [15 x i8] c"Out of bounds\0a\00"
-
 @_cNAL = constant [23 x i8] c"Negative array length\0a\00"
 
 define void @print_int(i32 %i) {
@@ -39,17 +38,17 @@ define i32 @main() {
     %d = alloca i8*
     %bull = alloca i1
     %_0 = icmp sge i32 102, 0
-    br i1 %_0, label %label1, label %label0
-label0:
+    br i1 %_0, label %ok_array_length1, label %negative_array_length0
+negative_array_length0:
     call void @throw_nal()
-    br label %label2
-label1:
+    br label %exit_nal_check2
+ok_array_length1:
     %_1 = add i32 102, 1
     %_2 = call i8* @calloc(i32 4, i32 %_1)
     %_3 = bitcast i8* %_2 to i32*
     store i32 102, i32* %_3
-    br label %label2
-label2:
+    br label %exit_nal_check2
+exit_nal_check2:
     store i32* %_3, i32** %arr
     %_4 = call i8* @calloc(i32 32, i32 1)
     %_5 = bitcast i8* %_4 to i8***
@@ -115,44 +114,44 @@ define i32* @A.afunct(i8* %this, i32* %.a1, i32* %.a2) {
     %_0 = load i32*, i32** %a1
     %_1 = load i32, i32* %_0
     %_2 = icmp ult i32 1, %_1
-    br i1 %_2, label %label1, label %label0
-label0:
+    br i1 %_2, label %in_bounds1, label %out_of_bounds0
+out_of_bounds0:
     call void @throw_oob()
-    br label %label2
-label1:
+    br label %exit_oob_check2
+in_bounds1:
     %_3 = add i32 1, 1
     %_4 = getelementptr i32, i32* %_0, i32 %_3
     %_5 = load i32, i32* %_4
-    br label %label2
-label2:
+    br label %exit_oob_check2
+exit_oob_check2:
     %_6 = load i32*, i32** %a2
     %_7 = load i32, i32* %_6
     %_8 = icmp ult i32 0, %_7
-    br i1 %_8, label %label4, label %label3
-label3:
+    br i1 %_8, label %in_bounds4, label %out_of_bounds3
+out_of_bounds3:
     call void @throw_oob()
-    br label %label5
-label4:
+    br label %exit_oob_check5
+in_bounds4:
     %_9 = add i32 0, 1
     %_10 = getelementptr i32, i32* %_6, i32 %_9
     store i32 %_5, i32* %_10
-    br label %label5
-label5:
+    br label %exit_oob_check5
+exit_oob_check5:
     %_11 = load i32*, i32** %a2
     store i32* %_11, i32** %a1
     call void (i32) @print_int(i32 42)
     %_12 = icmp sge i32 2, 0
-    br i1 %_12, label %label7, label %label6
-label6:
+    br i1 %_12, label %ok_array_length7, label %negative_array_length6
+negative_array_length6:
     call void @throw_nal()
-    br label %label8
-label7:
+    br label %exit_nal_check8
+ok_array_length7:
     %_13 = add i32 2, 1
     %_14 = call i8* @calloc(i32 4, i32 %_13)
     %_15 = bitcast i8* %_14 to i32*
     store i32 2, i32* %_15
-    br label %label8
-label8:
+    br label %exit_nal_check8
+exit_nal_check8:
     ret i32* %_15
 }
 
@@ -166,16 +165,16 @@ define i32 @B.bfunct(i8* %this, i32* %.aarr, i32 %.i) {
     %_2 = add i32 %_1, 1
     %_3 = load i32, i32* %_0
     %_4 = icmp ult i32 %_2, %_3
-    br i1 %_4, label %label1, label %label0
-label0:
+    br i1 %_4, label %in_bounds1, label %out_of_bounds0
+out_of_bounds0:
     call void @throw_oob()
-    br label %label2
-label1:
+    br label %exit_oob_check2
+in_bounds1:
     %_5 = add i32 %_2, 1
     %_6 = getelementptr i32, i32* %_0, i32 %_5
     %_7 = load i32, i32* %_6
-    br label %label2
-label2:
+    br label %exit_oob_check2
+exit_oob_check2:
     ret i32 %_7
 }
 
@@ -195,40 +194,40 @@ define i32* @C.afunct(i8* %this, i32* %.c1, i32* %.c2) {
     %_3 = load i32*, i32** %c1
     %_4 = load i32, i32* %_3
     %_5 = icmp ult i32 0, %_4
-    br i1 %_5, label %label1, label %label0
-label0:
+    br i1 %_5, label %in_bounds1, label %out_of_bounds0
+out_of_bounds0:
     call void @throw_oob()
-    br label %label2
-label1:
+    br label %exit_oob_check2
+in_bounds1:
     %_6 = add i32 0, 1
     %_7 = getelementptr i32, i32* %_3, i32 %_6
     %_8 = load i32, i32* %_7
-    br label %label2
-label2:
+    br label %exit_oob_check2
+exit_oob_check2:
     %_9 = load i32*, i32** %c2
     %_10 = load i32, i32* %_9
     %_11 = icmp ult i32 1, %_10
-    br i1 %_11, label %label4, label %label3
-label3:
+    br i1 %_11, label %in_bounds4, label %out_of_bounds3
+out_of_bounds3:
     call void @throw_oob()
-    br label %label5
-label4:
+    br label %exit_oob_check5
+in_bounds4:
     %_12 = add i32 1, 1
     %_13 = getelementptr i32, i32* %_9, i32 %_12
     %_14 = load i32, i32* %_13
-    br label %label5
-label5:
+    br label %exit_oob_check5
+exit_oob_check5:
     %_15 = icmp slt i32 %_8, %_14
-    br i1 %_15, label %label6, label %label7
-label6:
+    br i1 %_15, label %if_true_case6, label %if_false_case7
+if_true_case6:
     %_16 = load i32*, i32** %c1
     store i32* %_16, i32** %res
-    br label %label8
-label7:
+    br label %if_exit8
+if_false_case7:
     %_17 = load i32*, i32** %c2
     store i32* %_17, i32** %res
-    br label %label8
-label8:
+    br label %if_exit8
+if_exit8:
     %_18 = load i32*, i32** %res
     ret i32* %_18
 }
@@ -243,60 +242,60 @@ define i1 @D.checkInheritanceAndArgs(i8* %this) {
     call void (i32) @print_int(i32 %_1)
     store i32 1, i32* %i
     %_2 = icmp sge i32 2, 0
-    br i1 %_2, label %label1, label %label0
-label0:
+    br i1 %_2, label %ok_array_length1, label %negative_array_length0
+negative_array_length0:
     call void @throw_nal()
-    br label %label2
-label1:
+    br label %exit_nal_check2
+ok_array_length1:
     %_3 = add i32 2, 1
     %_4 = call i8* @calloc(i32 4, i32 %_3)
     %_5 = bitcast i8* %_4 to i32*
     store i32 2, i32* %_5
-    br label %label2
-label2:
+    br label %exit_nal_check2
+exit_nal_check2:
     store i32* %_5, i32** %arr
     %_6 = load i32*, i32** %arr
     %_7 = load i32, i32* %_6
     %_8 = icmp ult i32 0, %_7
-    br i1 %_8, label %label4, label %label3
-label3:
+    br i1 %_8, label %in_bounds4, label %out_of_bounds3
+out_of_bounds3:
     call void @throw_oob()
-    br label %label5
-label4:
+    br label %exit_oob_check5
+in_bounds4:
     %_9 = add i32 0, 1
     %_10 = getelementptr i32, i32* %_6, i32 %_9
     store i32 1, i32* %_10
-    br label %label5
-label5:
+    br label %exit_oob_check5
+exit_oob_check5:
     %_11 = load i32*, i32** %arr
     %_12 = load i32, i32* %_11
     %_13 = icmp ult i32 1, %_12
-    br i1 %_13, label %label7, label %label6
-label6:
+    br i1 %_13, label %in_bounds7, label %out_of_bounds6
+out_of_bounds6:
     call void @throw_oob()
-    br label %label8
-label7:
+    br label %exit_oob_check8
+in_bounds7:
     %_14 = add i32 1, 1
     %_15 = getelementptr i32, i32* %_11, i32 %_14
     store i32 0, i32* %_15
-    br label %label8
-label8:
+    br label %exit_oob_check8
+exit_oob_check8:
     %_16 = load i32*, i32** %arr
     %_17 = load i32, i32* %_16
     call void (i32) @print_int(i32 %_17)
     %_18 = load i32*, i32** %arr
     %_19 = load i32, i32* %_18
     %_20 = icmp ult i32 1, %_19
-    br i1 %_20, label %label10, label %label9
-label9:
+    br i1 %_20, label %in_bounds10, label %out_of_bounds9
+out_of_bounds9:
     call void @throw_oob()
-    br label %label11
-label10:
+    br label %exit_oob_check11
+in_bounds10:
     %_21 = add i32 1, 1
     %_22 = getelementptr i32, i32* %_18, i32 %_21
     %_23 = load i32, i32* %_22
-    br label %label11
-label11:
+    br label %exit_oob_check11
+exit_oob_check11:
     %_30 = load i32*, i32** %arr
     %_31 = load i32*, i32** %arr
     %_24 = bitcast i8* %this to i8***
@@ -307,64 +306,64 @@ label11:
     %_29 = call i32* %_28(i8* %this, i32* %_31, i32* %_30)
     %_32 = load i32, i32* %_29
     %_33 = icmp ult i32 1, %_32
-    br i1 %_33, label %label13, label %label12
-label12:
+    br i1 %_33, label %in_bounds13, label %out_of_bounds12
+out_of_bounds12:
     call void @throw_oob()
-    br label %label14
-label13:
+    br label %exit_oob_check14
+in_bounds13:
     %_34 = add i32 1, 1
     %_35 = getelementptr i32, i32* %_29, i32 %_34
     %_36 = load i32, i32* %_35
-    br label %label14
-label14:
+    br label %exit_oob_check14
+exit_oob_check14:
     %_37 = load i32*, i32** %arr
     %_38 = load i32, i32* %_37
     %_39 = icmp ult i32 %_23, %_38
-    br i1 %_39, label %label16, label %label15
-label15:
+    br i1 %_39, label %in_bounds16, label %out_of_bounds15
+out_of_bounds15:
     call void @throw_oob()
-    br label %label17
-label16:
+    br label %exit_oob_check17
+in_bounds16:
     %_40 = add i32 %_23, 1
     %_41 = getelementptr i32, i32* %_37, i32 %_40
     store i32 %_36, i32* %_41
-    br label %label17
-label17:
-    br label %label18
-label18:
+    br label %exit_oob_check17
+exit_oob_check17:
+    br label %loop_cond18
+loop_cond18:
     %_42 = load i32, i32* %i
     %_43 = icmp slt i32 %_42, 2
-    br i1 %_43, label %label19, label %label20
-label19:
+    br i1 %_43, label %loop_begin19, label %loop_end20
+loop_begin19:
     %_44 = load i32, i32* %i
     %_45 = add i32 %_44, 1
     store i32 %_45, i32* %i
-    br i1 0, label %label22, label %label21
-label21:
+    br i1 0, label %first_is_true22, label %first_is_false21
+first_is_false21:
     %_46 = and i1 0, 0
-    br label %label23
-label22:
+    br label %exit_and_op23
+first_is_true22:
     %_48 = bitcast i8* %this to i8***
     %_49 = load i8**, i8*** %_48
     %_50 = getelementptr i8*, i8** %_49, i32 2
     %_51 = load i8*, i8** %_50
     %_52 = bitcast i8* %_51 to i1 (i8*)*
     %_53 = call i1 %_52(i8* %this)
-    br label %label23
-label23:
-    %_47 = phi i1 [%_46, %label21], [%_53, %label22]
-    br i1 %_47, label %label24, label %label25
-label24:
+    br label %exit_and_op23
+exit_and_op23:
+    %_47 = phi i1 [%_46, %first_is_false21], [%_53, %first_is_true22]
+    br i1 %_47, label %if_true_case24, label %if_false_case25
+if_true_case24:
     call void (i32) @print_int(i32 44)
-    br label %label26
-label25:
+    br label %if_exit26
+if_false_case25:
     call void (i32) @print_int(i32 22)
-    br label %label26
-label26:
+    br label %if_exit26
+if_exit26:
     %_54 = load i32*, i32** %arr
     store i32* %_54, i32** %arr
-    br label %label18
-label20:
+    br label %loop_cond18
+loop_end20:
     ret i1 1
 }
 

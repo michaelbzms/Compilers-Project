@@ -14,6 +14,10 @@ public class LLVMNameGenerator {
         return "label" + (label_counter++);
     }
 
+    public String generateLabelName(String base){
+        return base + (label_counter++);
+    }
+
     public void resetLocalCounter(){
         var_counter = 0;
         label_counter = 0;

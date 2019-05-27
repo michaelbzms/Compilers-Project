@@ -14,7 +14,7 @@ import syntaxtree.*;
 
 public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorReturnInfo, VisitorParameterInfo> {
 
-    private static final boolean EMIT_COMMENTS = true;
+    private static final boolean EMIT_COMMENTS = false;
     private FileWritter out;
     private final SymbolTable ST;
     private LLVMNameGenerator nameGenerator;
@@ -44,7 +44,7 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
                 "declare void @exit(i32)\n" +
                 "\n" +
                 "@_cint = constant [4 x i8] c\"%d\\0a\\00\"\n" +
-                "@_cOOB = constant [15 x i8] c\"Out of bounds\\0a\\00\"\n\n" +
+                "@_cOOB = constant [15 x i8] c\"Out of bounds\\0a\\00\"\n" +
                 "@_cNAL = constant [23 x i8] c\"Negative array length\\0a\\00\"\n\n" +
                 "define void @print_int(i32 %i) {\n" +
                 "    %_str = bitcast [4 x i8]* @_cint to i8*\n" +
@@ -344,9 +344,9 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         } else System.err.println("Unknown identifier in array assignment?!");      // ^^
 
         // check index bounds
-        String exceptionlabel = nameGenerator.generateLabelName();
-        String oklabel = nameGenerator.generateLabelName();
-        String exitlabel = nameGenerator.generateLabelName();
+        String exceptionlabel = nameGenerator.generateLabelName("out_of_bounds");
+        String oklabel = nameGenerator.generateLabelName("in_bounds");
+        String exitlabel = nameGenerator.generateLabelName("exit_oob_check");
 
         String arrlen = nameGenerator.generateLocalVarName();
         String comp = nameGenerator.generateLocalVarName();
@@ -387,9 +387,9 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
         ExtendedVisitorReturnInfo r2 = n.f2.accept(this, argu);
         if (r2 == null) return null;
 
-        String trueblock = nameGenerator.generateLabelName();
-        String falseblock = nameGenerator.generateLabelName();
-        String exit = nameGenerator.generateLabelName();
+        String trueblock = nameGenerator.generateLabelName("if_true_case");
+        String falseblock = nameGenerator.generateLabelName("if_false_case");
+        String exit = nameGenerator.generateLabelName("if_exit");
 
         out.emit("    br i1 " + r2.getResultVarNameOrConstant() + ", label %" + trueblock + ", label %" + falseblock + "\n");
         out.emit(trueblock + ":\n");
@@ -412,9 +412,9 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      * f4 -> Statement()
      */
     public ExtendedVisitorReturnInfo visit(WhileStatement n, VisitorParameterInfo argu) {
-        String loopstart = nameGenerator.generateLabelName();  // before calculating r2 expression
-        String loopstmts = nameGenerator.generateLabelName();
-        String exit = nameGenerator.generateLabelName();
+        String loopstart = nameGenerator.generateLabelName("loop_cond");
+        String loopstmts = nameGenerator.generateLabelName("loop_begin");
+        String exit = nameGenerator.generateLabelName("loop_end");
 
         if (EMIT_COMMENTS) out.emit("    ; while loop\n");
         out.emit("    br label %" + loopstart + "\n");
@@ -477,9 +477,9 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      * f2 -> Clause()
      */
     public ExtendedVisitorReturnInfo visit(AndExpression n, VisitorParameterInfo argu) {
-        String falselabel = nameGenerator.generateLabelName();
-        String truelabel = nameGenerator.generateLabelName();
-        String exitlabel = nameGenerator.generateLabelName();
+        String falselabel = nameGenerator.generateLabelName("first_is_false");
+        String truelabel = nameGenerator.generateLabelName("first_is_true");
+        String exitlabel = nameGenerator.generateLabelName("exit_and_op");
         String falseval = nameGenerator.generateLocalVarName();
         String res = nameGenerator.generateLocalVarName();
 
@@ -578,9 +578,9 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
 
         // check that (unsigned) len < array.length or throw out of bounds exception
         if (EMIT_COMMENTS) out.emit("    ; array lookup\n");
-        String exceptionlabel = nameGenerator.generateLabelName();
-        String oklabel = nameGenerator.generateLabelName();
-        String exitlabel = nameGenerator.generateLabelName();
+        String exceptionlabel = nameGenerator.generateLabelName("out_of_bounds");
+        String oklabel = nameGenerator.generateLabelName("in_bounds");
+        String exitlabel = nameGenerator.generateLabelName("exit_oob_check");
 
         String arrlen = nameGenerator.generateLocalVarName();
         String comp = nameGenerator.generateLocalVarName();
@@ -806,9 +806,9 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
 
         if (EMIT_COMMENTS) out.emit("    ; array allocation\n");
         // check that len >= 0 or throw exception
-        String exceptionlabel = nameGenerator.generateLabelName();
-        String oklabel = nameGenerator.generateLabelName();
-        String exitlabel = nameGenerator.generateLabelName();
+        String exceptionlabel = nameGenerator.generateLabelName("negative_array_length");
+        String oklabel = nameGenerator.generateLabelName("ok_array_length");
+        String exitlabel = nameGenerator.generateLabelName("exit_nal_check");
 
         String comp = nameGenerator.generateLocalVarName();
         out.emit("    " + comp + " = icmp sge i32 " + r3.getResultVarNameOrConstant() + ", 0\n");
