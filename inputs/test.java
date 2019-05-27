@@ -23,6 +23,8 @@ class mytest {
         } else {
             System.out.println(false);
         }
+        ////////////////////////
+        i = s.lotsOfArgsTest(10,20,30,40,50);
     }
 }
 
@@ -53,5 +55,15 @@ class Point{
         pff = newpoint.setX(i);
         pff = newpoint.setY(j);
         return newpoint;
+    }
+
+
+    public int lotsOfArgsTest(int one, int two, int three, int four, int five){
+        System.out.println(one);
+        System.out.println(two);
+        System.out.println(three);
+        System.out.println(four);
+        System.out.println(five);
+        return 0;
     }
 }

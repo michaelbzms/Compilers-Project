@@ -677,9 +677,9 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
      */
     public ExtendedVisitorReturnInfo visit(ExpressionList n, VisitorParameterInfo argu) {
         ExtendedVisitorReturnInfo r0 = n.f0.accept(this, argu);      // emits code to calculate expre
+        argu.addToListOfResultVars(r0);         // must be(!) before n.f1.accept() is called!!!
         n.f1.accept(this, argu);
         if (r0 == null) return null;
-        argu.addToListOfResultVars(r0);
         return null;
     }
 
