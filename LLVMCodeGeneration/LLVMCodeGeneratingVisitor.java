@@ -14,7 +14,7 @@ import syntaxtree.*;
 
 public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorReturnInfo, VisitorParameterInfo> {
 
-    private static final boolean EMIT_COMMENTS = false;
+    private static final boolean EMIT_COMMENTS = true;
     private FileWritter out;
     private final SymbolTable ST;
     private LLVMNameGenerator nameGenerator;
@@ -479,23 +479,29 @@ public class LLVMCodeGeneratingVisitor extends GJDepthFirst<ExtendedVisitorRetur
     public ExtendedVisitorReturnInfo visit(AndExpression n, VisitorParameterInfo argu) {
         String falselabel = nameGenerator.generateLabelName("first_is_false");
         String truelabel = nameGenerator.generateLabelName("first_is_true");
+        String block_that_jumps_to_phi = nameGenerator.generateLabelName("block_that_jumps_to_phi");
         String exitlabel = nameGenerator.generateLabelName("exit_and_op");
-        String falseval = nameGenerator.generateLocalVarName();
         String res = nameGenerator.generateLocalVarName();
 
         if (EMIT_COMMENTS) out.emit("    ; short-circuiting \"&&\"\n");
-        ExtendedVisitorReturnInfo r0 = n.f0.accept(this, argu);   // emit code to calculate clause
+        ExtendedVisitorReturnInfo r0 = n.f0.accept(this, argu);    // emit code to calculate left clause
         if (r0 == null) return null;
         out.emit("    br i1 " + r0.getResultVarNameOrConstant() + ", label %" + truelabel + ", label %" + falselabel + "\n");
+
         out.emit(falselabel + ":\n");
-        out.emit("    " + falseval + " = and i1 0, 0\n");      // llvm does not allow to assign i1 0 directly
         out.emit("    br label %" + exitlabel + "\n");
+
         out.emit(truelabel + ":\n");
-        ExtendedVisitorReturnInfo r2 = n.f2.accept(this, argu);   // emit code to calculate clause
+
+        ExtendedVisitorReturnInfo r2 = n.f2.accept(this, argu);    // emit code to calculate clause
         if (r2 == null) return null;
+
+        out.emit("    br label %" + block_that_jumps_to_phi + "\n");
+        out.emit(block_that_jumps_to_phi + ":\n");
         out.emit("    br label %" + exitlabel + "\n");
         out.emit(exitlabel + ":\n");
-        out.emit("    " + res + " = phi i1 [" + falseval + ", %" + falselabel + "], [" + r2.getResultVarNameOrConstant() + ", %" + truelabel + "]\n");
+
+        out.emit("    " + res + " = phi i1 [0, %" + falselabel + "], [" + r2.getResultVarNameOrConstant() + ", %" + block_that_jumps_to_phi + "]\n");
         if (EMIT_COMMENTS) out.emit("    ; end of short-circuiting \"&&\"\n");
 
         return new ExtendedVisitorReturnInfo(MiniJavaType.BOOLEAN, res);
