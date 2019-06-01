@@ -21,11 +21,6 @@ public class ExtendedVisitorReturnInfo extends VisitorReturnInfo {
         resultVarNameOrConstant = _resultVarName;
     }
 
-    public ExtendedVisitorReturnInfo(String _name, MiniJavaType _type, int _beginLine, String _resultVarName){
-        super(_name, _type, _beginLine);
-        resultVarNameOrConstant = _resultVarName;
-    }
-
     public String getResultVarNameOrConstant() {
         return resultVarNameOrConstant;
     }

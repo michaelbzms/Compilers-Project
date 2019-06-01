@@ -1,10 +1,11 @@
-package SemanticAnalysis; /** This is a namespace of static functions used to perform semantic checks **/
+package SemanticAnalysis;
 
 import MiniJavaType.MiniJavaType;
 import SymbolTable.*;
 import MiniJavaType.*;
 
 public class SemanticChecks {
+    /** This is a namespace of static functions used to perform semantic checks **/
 
     public static boolean checkType(SymbolTable ST, MiniJavaType givenType, MiniJavaType targetType){
         if (ST == null || givenType == null || targetType == null){

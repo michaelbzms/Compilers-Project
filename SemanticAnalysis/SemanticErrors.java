@@ -3,6 +3,7 @@ package SemanticAnalysis;
 import MiniJavaType.MiniJavaType;
 
 public class SemanticErrors {
+    /** This is a namespace of static functions used to systematically print semantic error messages **/
 
     private static String giveEmptyContext(int beginLine){
         return (beginLine > 0 ? "on line " + beginLine + "\n    " : "");

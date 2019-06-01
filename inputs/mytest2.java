@@ -3,7 +3,10 @@ class mytest2 {
         int[] anInteger;
         boolean aBoolean;
         Car acar;
-        anInteger[2] = 2;
+        Animal a;
+        a = new Dog().getAnimalObj();
+        System.out.println(a.getId());
+        System.out.println(a.geeetAnInt());
     }
 }
 
@@ -108,6 +111,10 @@ class Animal  {
         return num + num3;
     }
 
+    public int geeetAnInt(){
+        return 0;
+    }
+
     public int getId(){
         return id;
     }
@@ -118,12 +125,19 @@ class Dog extends Animal {
 
     int numberOfLegs;
 
+    public int getId(){
+        System.out.println(102);
+        return id;
+    }
+
+
     public int moreId(int amount){
         int id;
         int[] arr;
         boolean a;
         a = f.foo(new truck());
         a = ! a;
+        id = 10;
         if (! a) {
             arr = new int[id];
             id = arr.length;

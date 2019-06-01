@@ -97,7 +97,6 @@ public class ClassInfo {
     }
 
     public int getTotalNumberOfMethods(){
-        // TODO: faster way?
         return getNextMethodOffset() / 8;
     }
 

@@ -1,6 +1,5 @@
 package Util;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class VisitorParameterInfo {
@@ -55,6 +54,6 @@ public class VisitorParameterInfo {
 
     // override use only
     public List<ExtendedVisitorReturnInfo> getListOfResultVars() { return null; }
-    public void addToListOfResultVars(ExtendedVisitorReturnInfo var){ }
+    public void addToListOfResultVars(ExtendedVisitorReturnInfo var) { }
 
 }

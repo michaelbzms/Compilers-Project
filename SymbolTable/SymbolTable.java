@@ -26,6 +26,9 @@ import java.util.Map;
 @SuppressWarnings("WeakerAccess")
 public class SymbolTable {
 
+	// options
+	private static final boolean PRINT_OFFSETS = false;
+
 	// Main class:
 	private String mainClassName = null;
 	private final ClassInfo mainClassInfo;
@@ -211,6 +214,7 @@ public class SymbolTable {
 
 
 	public void calculateOffsets(){
+		if (PRINT_OFFSETS) System.out.println("Fields and method offsets are:");
 		for (MyPair<String, ClassInfo> c : this.getOrderedClasses()){
 			int startingFieldOffset = 0, startingMethodOffset = 0;
 			ClassInfo motherClass = c.getSecond().getMotherClass();
@@ -220,14 +224,14 @@ public class SymbolTable {
 			}
 			// calculate offsets for fields
 			for (MyPair<String, VariableInfo> f : c.getSecond().getOrderedFields()){
-				//System.out.println(c.getFirst() + "." + f.getFirst() + " : " + (startingFieldOffset));
-				f.getSecond().setOffset(startingFieldOffset);   // (!) must be same object (2 references) as in the map TODO: check
+				if (PRINT_OFFSETS) System.out.println(c.getFirst() + "." + f.getFirst() + " : " + (startingFieldOffset));
+				f.getSecond().setOffset(startingFieldOffset);   // (!) must be same object (2 references) as in the map
 				startingFieldOffset += f.getSecond().getType().getOffsetOfType();
 			}
 			// calculate offsets for methods
 			for (MyPair<String, MethodInfo> m : c.getSecond().getOrderedMethods()){
 				if (!m.getSecond().isOverride()) {              // if method is a new one and not an @override
-					//System.out.println(c.getFirst() + "." + m.getFirst() + " : " + (startingMethodOffset));
+					if (PRINT_OFFSETS) System.out.println(c.getFirst() + "." + m.getFirst() + " : " + (startingMethodOffset));
 					m.getSecond().setOffset(startingMethodOffset);
 					startingMethodOffset += 8;
 				} else {
