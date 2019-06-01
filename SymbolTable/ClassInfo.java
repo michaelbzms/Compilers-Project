@@ -16,6 +16,10 @@ public class ClassInfo {
     private String motherClassName = null;    // name of the class this class extends (if it extends one)
     private ClassInfo motherClass = null;     // reference to that class in the symbol table
 
+    // Offsets (so that they are only calculated once):
+    private int fieldOffset = -1;
+    private int methodOffset = -1;
+
     public ClassInfo() { }
 
     public ClassInfo(String _motherClassName, ClassInfo _motherClass) {
@@ -78,22 +82,26 @@ public class ClassInfo {
     }
 
     public int getNextFieldOffset(){
+        if (fieldOffset > -1) return fieldOffset;  // if already calculated then do not repeat
         int sum = 0;
         if (motherClass != null) sum = motherClass.getNextFieldOffset();
         for (MyPair<String, VariableInfo> f : orderedFields){
             sum += f.getSecond().getType().getOffsetOfType();
         }
-        return sum;
+        fieldOffset = sum;
+        return fieldOffset;
     }
 
     public int getNextMethodOffset(){
+        if (methodOffset > -1) return methodOffset;  // if already calculated then do not repeat
         int sum = 0;
         if (motherClass != null) sum = motherClass.getNextMethodOffset();
         for (MyPair<String, MethodInfo> m : orderedMethods){
             // only add to offsets if it is a new method and not an @override (and not the main method -> don't count it as inherited)
             if (!m.getSecond().isOverride() && !m.getFirst().equals("main")) sum += 8;
         }
-        return sum;
+        methodOffset = sum;
+        return methodOffset;
     }
 
     public int getTotalNumberOfMethods(){

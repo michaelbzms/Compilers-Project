@@ -10,9 +10,13 @@ compile: ./*.java SymbolTable/*.java MiniJavaType/*.java
 execute:
 	java Main
 
-clean:
-	# remove generated stuff?
+cleaner:
+	# remove generated stuff
 	rm -rf visitor/ syntaxtree/ MiniJava-jtb.jj
 	rm -f $(GENERATED_ROOT_FILES)
+	# remove .class files
+	rm -f *.class */*.class *~
+
+clean:
 	# remove .class files
 	rm -f *.class */*.class *~

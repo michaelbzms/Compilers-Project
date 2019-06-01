@@ -7,6 +7,7 @@ class mytest2 {
         a = new Dog().getAnimalObj();
         System.out.println(a.getId());
         System.out.println(a.geeetAnInt());
+        System.out.println(new MySecondTest().foo(new Car()));
     }
 }
 
@@ -60,14 +61,10 @@ class C extends B {
 class MySecondTest extends mytest2 {
 
 
-    public boolean foo(Car longa){
-        Car acar;
+    public int foo(Car longa){
         int newid;
-        acar = longa;
-        if ( this.foo(new Car()) ) {
-            newid = longa.moreId(13);
-        } else newid = 0;
-        return true;
+        newid = longa.moreId(13);
+        return newid;
     }
 
 }
@@ -79,7 +76,8 @@ class Car {
         int id;
         int[] arr;
         boolean a;
-        a = ! a;
+        a = true;
+        id = 10;
         if (! a) {
             arr = new int[id];
             id = arr.length;
@@ -134,11 +132,10 @@ class Dog extends Animal {
     public int moreId(int amount){
         int id;
         int[] arr;
-        boolean a;
+        int a;
         a = f.foo(new truck());
-        a = ! a;
         id = 10;
-        if (! a) {
+        if (false) {
             arr = new int[id];
             id = arr.length;
         } else
