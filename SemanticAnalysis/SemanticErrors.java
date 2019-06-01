@@ -184,4 +184,7 @@ public class SemanticErrors {
         return giveContext(beginLine, className, methodName) + "Print statements cannot be used for non primitive type " + type.getDebugInfo();
     }
 
+    public static String thisExprInStaticMain(int beginLine){
+        return giveContext(beginLine) + "Use of \"this\" expression is illegal in static method main()";
+    }
 }

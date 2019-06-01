@@ -47,8 +47,8 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
      */
     public VisitorReturnInfo visit(MainClass n, VisitorParameterInfo argu) {
         if (detectedSemanticError) return null;
-        n.f14.accept(this, new VisitorParameterInfo("main", "main"));
-        n.f15.accept(this, new VisitorParameterInfo("main", "main"));
+        n.f14.accept(this, new VisitorParameterInfo("main", ST.getMainClassName(), "main"));
+        n.f15.accept(this, new VisitorParameterInfo("main", ST.getMainClassName(), "main"));
         return null;
     }
 
@@ -1036,6 +1036,14 @@ public class SemanticCheckingVisitor extends GJDepthFirst<VisitorReturnInfo, Vis
         if (detectedSemanticError) return null;
         n.f0.accept(this, null);
         // "this" is an object of the current class
+
+        // this cannot be used in main
+        if (ST.getMainClassName().equals(argu.getSupername()) && argu.getType().equals("main")){
+            this.detectedSemanticError = true;
+            this.errorMsg = SemanticErrors.thisExprInStaticMain(n.f0.beginLine);
+            return null;
+        }
+
         return new VisitorReturnInfo("this", new MiniJavaType(TypeEnum.CUSTOM, argu.getSupername()), n.f0.beginLine);
     }
 
