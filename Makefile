@@ -2,7 +2,7 @@ GENERATED_ROOT_FILES = JavaCharStream.java MiniJavaParser.java MiniJavaParserCon
 
 all: compile
 
-compile: ./*.java SymbolTable/*.java MiniJavaType/*.java
+compile: ./*.java SymbolTable/*.java MiniJavaType/*.java LLVMCodeGeneration/*.java SemanticAnalysis/*.java Util/*.java
 	java -jar Resources/jtb132di.jar MiniJava.jj
 	java -jar Resources/javacc5.jar MiniJava-jtb.jj
 	javac Main.java

@@ -32,7 +32,7 @@ public class LLVMCodeGenerating {
         for (int i = 0 ; i < VTable.length ; i++) VTable[i] = null;
         while (currClass != null){
             for (MyPair<String, MethodInfo> m : currClass.getOrderedMethods()){
-                if (VTable[m.getSecond().getOffset() / 8] == null && !m.getFirst().equals("main")){   // if not added before (by an override)
+                if (!m.getFirst().equals("main") && VTable[m.getSecond().getOffset() / 8] == null){   // if not added before (by an override)
                     VTable[m.getSecond().getOffset() / 8] = "i8* bitcast (" + getMethodType(currClassName, m.getFirst(), m.getSecond()) + " to i8*)";
                 }
             }

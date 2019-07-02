@@ -1,50 +1,23 @@
-class test1 {
-    public static void main(String[] illegal){
-        base ptr;
-        derived1 ptr1;
-        ptr = new base();
-        System.out.println(ptr.method());
-        ptr = new derived1();
-        System.out.println(ptr.method());
-        ptr = new derived2();
-        System.out.println(ptr.method());
-        ptr = new derived11();
-        System.out.println(ptr.method());
+class ExtendMain{
+    public static void main(String[] a){
+        System.out.println((new Fac2().Init(123)).ComputeFac(456));
     }
 }
 
+class Fac extends ExtendMain{
+    int i;
+}
 
-class base {
-    int val;
+class Fac2 extends Fac{
+    int j;
 
-    public int method(){
-        return val;
+    public Fac2 Init(int num){
+        i = num;
+        return this ;
     }
-}
 
-class derived1 extends base {
-    int val;
-
-//    public int method(){
-//        val = 1;
-//        return val;
-//    }
-}
-
-class derived2 extends base {
-    int val;
-
-    public int method(){
-        val = 2;
-        return val;
-    }
-}
-
-class derived11 extends derived1 {
-    int val;
-
-    public int method(){
-        val = 11;
-        return val;
+    public int ComputeFac(int num){
+        j = num;
+        return i + j ;
     }
 }
